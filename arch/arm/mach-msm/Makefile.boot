@@ -26,6 +26,10 @@ params_phys-$(CONFIG_ARCH_MSM8625)	:= 0x00200100
 params_phys-$(CONFIG_ARCH_MSM7X30)	:= 0x00200100
 initrd_phys-$(CONFIG_ARCH_MSM7X30)	:= 0x01200000
 
+   zreladdr-$(CONFIG_MACH_VIVO)		:= 0x04408000
+params_phys-$(CONFIG_MACH_VIVO)		:= 0x04400100
+initrd_phys-$(CONFIG_MACH_VIVO)		:= 0x05400000
+
 ifeq ($(CONFIG_MSM_SOC_REV_A),y)
 # QSD8x50
    zreladdr-$(CONFIG_ARCH_QSD8X50)	:= 0x20008000
