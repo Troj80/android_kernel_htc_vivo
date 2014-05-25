@@ -1099,7 +1099,7 @@ struct msm_camera_device_platform_data msm_camera_device_data = {
 	.ioclk.mclk_clk_rate = 24000000,
 	.ioclk.vfe_clk_rate  = 147456000,
 };
-
+/*
 static struct msm_camera_sensor_flash_src msm_flash_src_pwm = {
 	.flash_sr_type = MSM_CAMERA_FLASH_SRC_PWM,
 	._fsrc.pwm_src.freq  = 1000,
@@ -1108,7 +1108,7 @@ static struct msm_camera_sensor_flash_src msm_flash_src_pwm = {
 	._fsrc.pwm_src.high_load = 100,
 	._fsrc.pwm_src.channel = 7,
 };
-
+*/
 #ifdef CONFIG_MT9D112
 static struct msm_camera_sensor_flash_data flash_mt9d112 = {
 	.flash_type = MSM_CAMERA_FLASH_LED,
