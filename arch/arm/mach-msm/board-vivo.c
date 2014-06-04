@@ -88,6 +88,7 @@
 #include <mach/sdio_al.h>
 #include "smd_private.h"
 #include <linux/bma150.h>
+#include <linux/tps65200.h>
 
 #include "board-msm7x30-regulator.h"
 #include "pm.h"
@@ -716,6 +717,20 @@ static struct msm_ssbi_platform_data msm7x30_ssbi_pm8058_pdata = {
 	},
 };
 #endif
+
+#define PMGPIO(x) (x-1)
+#define VIVO_GPIO_CHG_INT		PMGPIO(16)
+
+static struct tps65200_platform_data tps65200_data = {
+	.gpio_chg_int = MSM_GPIO_TO_INT(PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_CHG_INT)),
+};
+
+static struct i2c_board_info i2c_tps_devices[] = {
+	{
+		I2C_BOARD_INFO("tps65200", 0xD4 >> 1),
+		.platform_data = &tps65200_data,
+	},
+};
 
 static struct i2c_board_info cy8info[] __initdata = {
 	{
@@ -6885,6 +6900,9 @@ static void __init msm7x30_init(void)
 
 	i2c_register_board_info(0, msm_i2c_board_info,
 			ARRAY_SIZE(msm_i2c_board_info));
+
+	i2c_register_board_info(0, i2c_tps_devices,
+			ARRAY_SIZE(i2c_tps_devices));
 
 	if (!machine_is_msm8x55_svlte_ffa() && !machine_is_msm7x30_fluid())
 		marimba_pdata.tsadc = &marimba_tsadc_pdata;
