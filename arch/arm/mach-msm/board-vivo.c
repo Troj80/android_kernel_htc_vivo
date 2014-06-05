@@ -66,7 +66,6 @@
 #include <linux/cyttsp-qc.h>
 
 #include <asm/mach/mmc.h>
-#include <asm/mach/flash.h>
 #include <mach/vreg.h>
 #include <linux/platform_data/qcom_crypto_device.h>
 
@@ -5252,7 +5251,6 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_dmov,
 	&smc91x_device,
 	&smsc911x_device,
-	&msm_device_nand,
 #ifdef CONFIG_USB_MSM_OTG_72K
 	&msm_device_otg,
 #ifdef CONFIG_USB_GADGET
@@ -5490,11 +5488,6 @@ static void __init msm7x30_init_irq(void)
 {
 	msm_init_irq();
 }
-
-static struct msm_gpio msm_nand_ebi2_cfg_data[] = {
-	{GPIO_CFG(86, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA), "ebi2_cs1"},
-	{GPIO_CFG(115, 2, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA), "ebi2_busy1"},
-};
 
 #if (defined(CONFIG_MMC_MSM_SDC1_SUPPORT)\
 	|| defined(CONFIG_MMC_MSM_SDC2_SUPPORT)\
@@ -6321,27 +6314,6 @@ out3:
 
 }
 
-static void __init msm7x30_init_nand(void)
-{
-	char *build_id;
-	struct flash_platform_data *plat_data;
-
-	build_id = socinfo_get_build_id();
-	if (build_id == NULL) {
-		pr_err("%s: Build ID not available from socinfo\n", __func__);
-		return;
-	}
-
-	if (build_id[8] == 'C' &&
-			!msm_gpios_request_enable(msm_nand_ebi2_cfg_data,
-			ARRAY_SIZE(msm_nand_ebi2_cfg_data))) {
-		plat_data = msm_device_nand.dev.platform_data;
-		plat_data->interleave = 1;
-		printk(KERN_INFO "%s: Interleave mode Build ID found\n",
-			__func__);
-	}
-}
-
 #ifdef CONFIG_SERIAL_MSM_CONSOLE
 static struct msm_gpio uart2_config_data[] = {
 	{ GPIO_CFG(49, 2, GPIO_CFG_OUTPUT,  GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), "UART2_RFR"},
@@ -6869,7 +6841,6 @@ static void __init msm7x30_init(void)
 	msm7x30_init_cam();
 #endif
 	msm7x30_init_mmc();
-	msm7x30_init_nand();
 	msm_qsd_spi_init();
 
 #ifdef CONFIG_SPI_QSD
