@@ -85,6 +85,7 @@
 #include <mach/qdsp5v2/audio_dev_ctl.h>
 #include <mach/sdio_al.h>
 #include "smd_private.h"
+#include <linux/proc_fs.h>
 #include <linux/bma150.h>
 #include <linux/tps65200.h>
 
@@ -169,6 +170,9 @@ static struct platform_device ion_dev;
 
 #define DDR1_BANK_BASE 0X20000000
 #define DDR2_BANK_BASE 0X40000000
+
+extern int emmc_partition_read_proc(char *page, char **start, off_t off,
+					int count, int *eof, void *data);
 
 static unsigned int phys_add = DDR2_BANK_BASE;
 unsigned long ebi1_phys_offset = DDR2_BANK_BASE;
@@ -6646,6 +6650,7 @@ static struct i2c_board_info cy8ctma300_board_info[] = {
 
 static void __init msm7x30_init(void)
 {
+	struct proc_dir_entry *entry = NULL;
 	int rc;
 	unsigned smem_size;
 	uint32_t usb_hub_gpio_cfg_value = GPIO_CFG(56,
@@ -6737,6 +6742,14 @@ static void __init msm7x30_init(void)
 	snddev_poweramp_gpio_init();
 	snddev_hsed_voltage_init();
 	aux_pcm_gpio_init();
+#endif
+
+#ifdef CONFIG_MMC_MSM
+	printk(KERN_ERR "%s: msm7627a_init_mmc()\n", __func__);
+	entry = create_proc_read_entry("emmc", 0, NULL, emmc_partition_read_proc, NULL);
+	printk(KERN_ERR "%s: create_proc_read_entry()\n", __func__);
+	if (!entry)
+		printk(KERN_ERR"Create /proc/emmc failed!\n");
 #endif
 
 	i2c_register_board_info(0, msm_i2c_board_info,

@@ -256,7 +256,7 @@ obj-$(CONFIG_MACH_MSM8625_QRD7) +=  board-qrd7627a.o board-7627a-all.o
 obj-$(CONFIG_MACH_MSM8625_FFA) += board-msm7x27a.o board-7627a-all.o
 obj-$(CONFIG_MACH_MSM8625_EVT) += board-msm7x27a.o board-7627a-all.o
 ifdef CONFIG_MACH_VIVO
-obj-$(CONFIG_MACH_VIVO) += board-vivo.o devices-vivo.o gpiomux-7x30.o
+obj-$(CONFIG_MACH_VIVO) += board-vivo.o devices-vivo.o gpiomux-7x30.o emmc_partitions.o
 else
 obj-$(CONFIG_MACH_MSM7X30_SURF) += board-msm7x30.o devices-msm7x30.o gpiomux-7x30.o
 endif
