@@ -90,6 +90,7 @@
 
 #include "board-msm7x30-regulator.h"
 #include "pm.h"
+#include "board-vivo.h"
 
 #define MSM_PMEM_SF_SIZE	0x1700000
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
@@ -103,11 +104,7 @@
  */
 #define MSM_V4L2_VIDEO_OVERLAY_BUF_SIZE 2764800
 
-#ifdef CONFIG_FB_MSM_HDMI_ADV7520_PANEL
-#define MSM_FB_EXT_BUF_SIZE (1280 * 720 * 2 * 1) /* 2 bpp x 1 page */
-#else
 #define MSM_FB_EXT_BUF_SIZE    0
-#endif
 
 #ifdef CONFIG_FB_MSM_OVERLAY0_WRITEBACK
 /* width x height x 3 bpp x 2 frame buffer */
@@ -116,9 +113,6 @@
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE  0
 #endif
 
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_EXT_BUF_SIZE, 4096)
-
-#define MSM_PMEM_ADSP_SIZE      0x242A000
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
 #define PMEM_KERNEL_EBI0_SIZE   0x600000
 #define MSM_PMEM_AUDIO_SIZE     0x200000
@@ -137,8 +131,6 @@ static struct platform_device ion_dev;
 #define PMIC_GPIO_SDC4_EN_N	17  /* PMIC GPIO Number 18 */
 #define PMIC_GPIO_HDMI_5V_EN_V3 32  /* PMIC GPIO for V3 H/W */
 #define PMIC_GPIO_HDMI_5V_EN_V2 39 /* PMIC GPIO for V2 H/W */
-
-#define ADV7520_I2C_ADDR	0x39
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
 
@@ -718,9 +710,6 @@ static struct msm_ssbi_platform_data msm7x30_ssbi_pm8058_pdata = {
 	},
 };
 #endif
-
-#define PMGPIO(x) (x-1)
-#define VIVO_GPIO_CHG_INT		PMGPIO(16)
 
 static struct tps65200_platform_data tps65200_data = {
 	.gpio_chg_int = MSM_GPIO_TO_INT(PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_CHG_INT)),
@@ -2818,23 +2807,6 @@ static struct ofn_atlab_platform_data optnav_data = {
 	},
 };
 
-static int hdmi_comm_power(int on, int show);
-static int hdmi_init_irq(void);
-static int hdmi_enable_5v(int on);
-static int hdmi_core_power(int on, int show);
-static int hdmi_cec_power(int on);
-static bool hdmi_check_hdcp_hw_support(void);
-
-static struct msm_hdmi_platform_data adv7520_hdmi_data = {
-	.irq = MSM_GPIO_TO_INT(18),
-	.comm_power = hdmi_comm_power,
-	.init_irq = hdmi_init_irq,
-	.enable_5v = hdmi_enable_5v,
-	.core_power = hdmi_core_power,
-	.cec_power = hdmi_cec_power,
-	.check_hdcp_hw_support = hdmi_check_hdcp_hw_support,
-};
-
 #ifdef CONFIG_BOSCH_BMA150
 
 static struct regulator_bulk_data sensors_ldo[] = {
@@ -2911,10 +2883,6 @@ static struct i2c_board_info msm_i2c_board_info[] = {
 		I2C_BOARD_INFO("m33c01", OPTNAV_I2C_SLAVE_ADDR),
 		.irq		= MSM_GPIO_TO_INT(OPTNAV_IRQ),
 		.platform_data = &optnav_data,
-	},
-	{
-		I2C_BOARD_INFO("adv7520", ADV7520_I2C_ADDR),
-		.platform_data = &adv7520_hdmi_data,
 	},
 };
 
@@ -3576,100 +3544,6 @@ static int hdmi_cec_power(int on)
 		regulator_bulk_disable(ARRAY_SIZE(hdmi_cec_regs),
 				hdmi_cec_regs);
 }
-
-#if defined(CONFIG_FB_MSM_HDMI_ADV7520_PANEL) || defined(CONFIG_BOSCH_BMA150)
-/* there is an i2c address conflict between adv7520 and bma150 sensor after
- * power up on fluid. As a solution, the default address of adv7520's packet
- * memory is changed as soon as possible
- */
-static int __init fluid_i2c_address_fixup(void)
-{
-	unsigned char wBuff[16];
-	unsigned char rBuff[16];
-	struct i2c_msg msgs[3];
-	int res;
-	int rc = -EINVAL;
-	struct i2c_adapter *adapter;
-
-	if (machine_is_msm7x30_fluid()) {
-		adapter = i2c_get_adapter(0);
-		if (!adapter) {
-			pr_err("%s: invalid i2c adapter\n", __func__);
-			return PTR_ERR(adapter);
-		}
-
-		/* turn on LDO8 */
-		rc = hdmi_core_power(1, 0);
-		if (rc) {
-			pr_err("%s: could not enable hdmi core regs: %d",
-					__func__, rc);
-			goto adapter_put;
-		}
-
-		/* change packet memory address to 0x74 */
-		wBuff[0] = 0x45;
-		wBuff[1] = 0x74;
-
-		msgs[0].addr = ADV7520_I2C_ADDR;
-		msgs[0].flags = 0;
-		msgs[0].buf = (unsigned char *) wBuff;
-		msgs[0].len = 2;
-
-		res = i2c_transfer(adapter, msgs, 1);
-		if (res != 1) {
-			pr_err("%s: error writing adv7520\n", __func__);
-			goto ldo8_disable;
-		}
-
-		/* powerdown adv7520 using bit 6 */
-		/* i2c read first */
-		wBuff[0] = 0x41;
-
-		msgs[0].addr = ADV7520_I2C_ADDR;
-		msgs[0].flags = 0;
-		msgs[0].buf = (unsigned char *) wBuff;
-		msgs[0].len = 1;
-
-		msgs[1].addr = ADV7520_I2C_ADDR;
-		msgs[1].flags = I2C_M_RD;
-		msgs[1].buf = rBuff;
-		msgs[1].len = 1;
-		res = i2c_transfer(adapter, msgs, 2);
-		if (res != 2) {
-			pr_err("%s: error reading adv7520\n", __func__);
-			goto ldo8_disable;
-		}
-
-		/* i2c write back */
-		wBuff[0] = 0x41;
-		wBuff[1] = rBuff[0] | 0x40;
-
-		msgs[0].addr = ADV7520_I2C_ADDR;
-		msgs[0].flags = 0;
-		msgs[0].buf = (unsigned char *) wBuff;
-		msgs[0].len = 2;
-
-		res = i2c_transfer(adapter, msgs, 1);
-		if (res != 1) {
-			pr_err("%s: error writing adv7520\n", __func__);
-			goto ldo8_disable;
-		}
-
-		/* for successful fixup, we release the i2c adapter */
-		/* but leave ldo8 on so that the adv7520 is not repowered */
-		i2c_put_adapter(adapter);
-		pr_info("%s: fluid i2c address conflict resolved\n", __func__);
-	}
-	return 0;
-
-ldo8_disable:
-	hdmi_core_power(0, 0);
-adapter_put:
-	i2c_put_adapter(adapter);
-	return rc;
-}
-fs_initcall_sync(fluid_i2c_address_fixup);
-#endif
 
 static bool hdmi_check_hdcp_hw_support(void)
 {
