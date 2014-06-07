@@ -129,8 +129,6 @@ static struct platform_device ion_dev;
 #define PMIC_VREG_WLAN_LEVEL	2900
 #define PMIC_GPIO_SD_DET	36
 #define PMIC_GPIO_SDC4_EN_N	17  /* PMIC GPIO Number 18 */
-#define PMIC_GPIO_HDMI_5V_EN_V3 32  /* PMIC GPIO for V3 H/W */
-#define PMIC_GPIO_HDMI_5V_EN_V2 39 /* PMIC GPIO for V2 H/W */
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
 
@@ -218,18 +216,6 @@ static int pm8058_gpios_init(void)
 		},
 	};
 
-	struct pm8xxx_gpio_init_info hdmi_5V_en = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_HDMI_5V_EN_V3),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = PM8058_GPIO_VIN_VPH,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.out_strength   = PM_GPIO_STRENGTH_LOW,
-			.output_value   = 0,
-		},
-	};
-
 	struct pm8xxx_gpio_init_info flash_boost_enable = {
 		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_FLASH_BOOST_ENABLE),
 		{
@@ -273,20 +259,6 @@ static int pm8058_gpios_init(void)
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
-		return rc;
-	}
-
-	if (machine_is_msm8x55_svlte_surf() || machine_is_msm8x55_svlte_ffa() ||
-						machine_is_msm7x30_fluid())
-		hdmi_5V_en.gpio = PMIC_GPIO_HDMI_5V_EN_V2;
-	else
-		hdmi_5V_en.gpio = PMIC_GPIO_HDMI_5V_EN_V3;
-
-	hdmi_5V_en.gpio = PM8058_GPIO_PM_TO_SYS(hdmi_5V_en.gpio);
-
-	rc = pm8xxx_gpio_config(hdmi_5V_en.gpio, &hdmi_5V_en.config);
-	if (rc) {
-		pr_err("%s PMIC_GPIO_HDMI_5V_EN config failed\n", __func__);
 		return rc;
 	}
 
@@ -2420,12 +2392,6 @@ static struct resource msm_aictl_resources[] = {
 
 static struct resource msm_mi2s_resources[] = {
 	{
-		.name = "hdmi",
-		.start = 0xac900000,
-		.end = 0xac900038,
-		.flags = IORESOURCE_MEM,
-	},
-	{
 		.name = "codec_rx",
 		.start = 0xac940040,
 		.end = 0xac940078,
@@ -3342,191 +3308,6 @@ static struct platform_device lcdc_sharp_panel_device = {
 	}
 };
 
-static struct msm_gpio dtv_panel_gpios[] = {
-	{ GPIO_CFG(120, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "wca_mclk" },
-	{ GPIO_CFG(121, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "wca_sd0" },
-	{ GPIO_CFG(122, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "wca_sd1" },
-	{ GPIO_CFG(123, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "wca_sd2" },
-	{ GPIO_CFG(124, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_8MA), "dtv_pclk" },
-	{ GPIO_CFG(125, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_en" },
-	{ GPIO_CFG(126, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_vsync" },
-	{ GPIO_CFG(127, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_hsync" },
-	{ GPIO_CFG(128, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data0" },
-	{ GPIO_CFG(129, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data1" },
-	{ GPIO_CFG(130, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data2" },
-	{ GPIO_CFG(131, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data3" },
-	{ GPIO_CFG(132, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data4" },
-	{ GPIO_CFG(160, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data5" },
-	{ GPIO_CFG(161, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data6" },
-	{ GPIO_CFG(162, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data7" },
-	{ GPIO_CFG(163, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data8" },
-	{ GPIO_CFG(164, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_data9" },
-	{ GPIO_CFG(165, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat10" },
-	{ GPIO_CFG(166, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat11" },
-	{ GPIO_CFG(167, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat12" },
-	{ GPIO_CFG(168, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat13" },
-	{ GPIO_CFG(169, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat14" },
-	{ GPIO_CFG(170, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat15" },
-	{ GPIO_CFG(171, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat16" },
-	{ GPIO_CFG(172, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat17" },
-	{ GPIO_CFG(173, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat18" },
-	{ GPIO_CFG(174, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat19" },
-	{ GPIO_CFG(175, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat20" },
-	{ GPIO_CFG(176, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat21" },
-	{ GPIO_CFG(177, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat22" },
-	{ GPIO_CFG(178, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA), "dtv_dat23" },
-};
-
-
-#ifdef HDMI_RESET
-static unsigned dtv_reset_gpio =
-	GPIO_CFG(37, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA);
-#endif
-
-static struct regulator_bulk_data hdmi_core_regs[] = {
-	{ .supply = "ldo8",  .min_uV = 1800000, .max_uV = 1800000 },
-};
-
-static struct regulator_bulk_data hdmi_comm_regs[] = {
-	{ .supply = "ldo8",  .min_uV = 1800000, .max_uV = 1800000 },
-	{ .supply = "ldo10", .min_uV = 2600000, .max_uV = 2600000 },
-};
-
-static struct regulator_bulk_data hdmi_cec_regs[] = {
-	{ .supply = "ldo17", .min_uV = 2600000, .max_uV = 2600000 },
-};
-
-static int __init hdmi_init_regs(void)
-{
-	int rc;
-
-	rc = regulator_bulk_get(NULL, ARRAY_SIZE(hdmi_core_regs),
-			hdmi_core_regs);
-
-	if (rc) {
-		pr_err("%s: could not get %s regulators: %d\n",
-				__func__, "core", rc);
-		goto out;
-	}
-
-	rc = regulator_bulk_set_voltage(ARRAY_SIZE(hdmi_core_regs),
-			hdmi_core_regs);
-
-	if (rc) {
-		pr_err("%s: could not set %s voltages: %d\n",
-				__func__, "core", rc);
-		goto free_core;
-	}
-
-	rc = regulator_bulk_get(NULL, ARRAY_SIZE(hdmi_comm_regs),
-			hdmi_comm_regs);
-
-	if (rc) {
-		pr_err("%s: could not get %s regulators: %d\n",
-				__func__, "comm", rc);
-		goto free_core;
-	}
-
-	rc = regulator_bulk_set_voltage(ARRAY_SIZE(hdmi_comm_regs),
-			hdmi_comm_regs);
-
-	if (rc) {
-		pr_err("%s: could not set %s voltages: %d\n",
-				__func__, "comm", rc);
-		goto free_comm;
-	}
-
-	rc = regulator_bulk_get(NULL, ARRAY_SIZE(hdmi_cec_regs),
-			hdmi_cec_regs);
-
-	if (rc) {
-		pr_err("%s: could not get %s regulators: %d\n",
-				__func__, "cec", rc);
-		goto free_comm;
-	}
-
-	rc = regulator_bulk_set_voltage(ARRAY_SIZE(hdmi_cec_regs),
-			hdmi_cec_regs);
-
-	if (rc) {
-		pr_err("%s: could not set %s voltages: %d\n",
-				__func__, "cec", rc);
-		goto free_cec;
-	}
-
-	return 0;
-
-free_cec:
-	regulator_bulk_free(ARRAY_SIZE(hdmi_cec_regs), hdmi_cec_regs);
-free_comm:
-	regulator_bulk_free(ARRAY_SIZE(hdmi_comm_regs), hdmi_comm_regs);
-free_core:
-	regulator_bulk_free(ARRAY_SIZE(hdmi_core_regs), hdmi_core_regs);
-out:
-	return rc;
-}
-
-static int dtv_panel_power(int on)
-{
-	int flag_on = !!on;
-	static int dtv_power_save_on;
-	int rc;
-
-	if (dtv_power_save_on == flag_on)
-		return 0;
-
-	dtv_power_save_on = flag_on;
-	pr_info("%s: %d\n", __func__, on);
-
-#ifdef HDMI_RESET
-	if (on) {
-		/* reset Toshiba WeGA chip -- toggle reset pin -- gpio_180 */
-		rc = gpio_tlmm_config(dtv_reset_gpio, GPIO_CFG_ENABLE);
-		if (rc) {
-			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
-				       __func__, dtv_reset_gpio, rc);
-			return rc;
-		}
-
-		/* bring reset line low to hold reset*/
-		gpio_set_value(37, 0);
-	}
-#endif
-
-	if (on) {
-		rc = msm_gpios_enable(dtv_panel_gpios,
-				ARRAY_SIZE(dtv_panel_gpios));
-		if (rc < 0) {
-			printk(KERN_ERR "%s: gpio enable failed: %d\n",
-				__func__, rc);
-			return rc;
-		}
-	} else {
-		rc = msm_gpios_disable(dtv_panel_gpios,
-				ARRAY_SIZE(dtv_panel_gpios));
-		if (rc < 0) {
-			printk(KERN_ERR "%s: gpio disable failed: %d\n",
-				__func__, rc);
-			return rc;
-		}
-	}
-
-	mdelay(5);		/* ensure power is stable */
-
-#ifdef HDMI_RESET
-	if (on) {
-		gpio_set_value(37, 1);	/* bring reset line high */
-		mdelay(10);		/* 10 msec before IO can be accessed */
-	}
-#endif
-
-	return rc;
-}
-
-static struct lcdc_platform_data dtv_pdata = {
-	.lcdc_power_save   = dtv_panel_power,
-};
-
 static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
        .inject_rx_on_wakeup = 1,
        .rx_to_inject = 0xFD,
@@ -4287,85 +4068,11 @@ static struct lcdc_platform_data lcdc_pdata = {
 	.lcdc_power_save   = lcdc_panel_power,
 };
 
-static struct regulator *atv_s4, *atv_ldo9;
-
-static int __init atv_dac_power_init(void)
-{
-	int rc;
-	struct regulator_bulk_data regs[] = {
-		{ .supply = "smps4", .min_uV = 2200000, .max_uV = 2200000 },
-		{ .supply = "ldo9",  .min_uV = 2050000, .max_uV = 2050000 },
-	};
-
-	rc = regulator_bulk_get(NULL, ARRAY_SIZE(regs), regs);
-
-	if (rc) {
-		pr_err("%s: could not get regulators: %d\n", __func__, rc);
-		goto bail;
-	}
-
-	rc = regulator_bulk_set_voltage(ARRAY_SIZE(regs), regs);
-
-	if (rc) {
-		pr_err("%s: could not set voltages: %d\n", __func__, rc);
-		goto reg_free;
-	}
-
-	atv_s4   = regs[0].consumer;
-	atv_ldo9 = regs[1].consumer;
-
-reg_free:
-	regulator_bulk_free(ARRAY_SIZE(regs), regs);
-bail:
-	return rc;
-}
-
-static int atv_dac_power(int on)
-{
-	int rc = 0;
-
-	if (on) {
-		rc = regulator_enable(atv_s4);
-		if (rc) {
-			pr_err("%s: s4 vreg enable failed (%d)\n",
-				__func__, rc);
-			return rc;
-		}
-		rc = regulator_enable(atv_ldo9);
-		if (rc) {
-			pr_err("%s: ldo9 vreg enable failed (%d)\n",
-				__func__, rc);
-			return rc;
-		}
-	} else {
-		rc = regulator_disable(atv_ldo9);
-		if (rc) {
-			pr_err("%s: ldo9 vreg disable failed (%d)\n",
-				   __func__, rc);
-			return rc;
-		}
-		rc = regulator_disable(atv_s4);
-		if (rc) {
-			pr_err("%s: s4 vreg disable failed (%d)\n",
-				   __func__, rc);
-			return rc;
-		}
-	}
-	return rc;
-}
-
-static struct tvenc_platform_data atv_pdata = {
-	.poll		 = 1,
-	.pm_vid_en	 = atv_dac_power,
-};
-
 static void __init msm_fb_add_devices(void)
 {
 	msm_fb_register_device("mdp", &mdp_pdata);
 	msm_fb_register_device("pmdh", &mddi_pdata);
 	msm_fb_register_device("lcdc", &lcdc_pdata);
-	msm_fb_register_device("dtv", &dtv_pdata);
-	msm_fb_register_device("tvenc", &atv_pdata);
 #ifdef CONFIG_FB_MSM_TVOUT
 	msm_fb_register_device("tvout_device", NULL);
 #endif
@@ -6438,9 +6145,7 @@ static void __init msm7x30_init(void)
 			ARRAY_SIZE(lcdc_toshiba_spi_board_info));
 #endif
 
-	atv_dac_power_init();
 	sensors_ldo_init();
-	hdmi_init_regs();
 	msm_fb_add_devices();
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	BUG_ON(msm_pm_boot_init(&msm_pm_boot_pdata));
