@@ -653,7 +653,7 @@ static struct pm8xxx_keypad_platform_data fluid_keypad_data = {
 
 static struct pm8xxx_irq_platform_data pm8xxx_irq_pdata = {
 	.irq_base		= PMIC8058_IRQ_BASE,
-	.devirq			= MSM_GPIO_TO_INT(PMIC_GPIO_INT),
+	.devirq			= MSM_GPIO_TO_INT(VIVO_PMIC_GPIO_INT),
 	.irq_trigger_flag       = IRQF_TRIGGER_LOW,
 };
 
