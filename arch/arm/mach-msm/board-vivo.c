@@ -1666,10 +1666,6 @@ static struct regulator *vreg_marimba_1;
 static struct regulator *vreg_marimba_2;
 static struct regulator *vreg_bahama;
 
-static struct msm_gpio timpani_reset_gpio_cfg[] = {
-{ GPIO_CFG(TIMPANI_RESET_GPIO, 0, GPIO_CFG_OUTPUT,
-	GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "timpani_reset"} };
-
 static u8 read_bahama_ver(void)
 {
 	int rc;
@@ -1699,80 +1695,6 @@ static u8 read_bahama_ver(void)
 		return VER_UNSUPPORTED;
 	}
 }
-
-static int config_timpani_reset(void)
-{
-	int rc;
-
-	rc = msm_gpios_request_enable(timpani_reset_gpio_cfg,
-				ARRAY_SIZE(timpani_reset_gpio_cfg));
-	if (rc < 0) {
-		printk(KERN_ERR
-			"%s: msm_gpios_request_enable failed (%d)\n",
-				__func__, rc);
-	}
-	return rc;
-}
-
-static unsigned int msm_timpani_setup_power(void)
-{
-	int rc;
-
-	rc = config_timpani_reset();
-	if (rc < 0)
-		goto out;
-
-	rc = regulator_enable(vreg_marimba_1);
-	if (rc) {
-		pr_err("%s: regulator_enable failed (%d)\n", __func__, rc);
-		goto out;
-	}
-
-	rc = regulator_enable(vreg_marimba_2);
-	if (rc) {
-		pr_err("%s: regulator_enable failed (%d)\n", __func__, rc);
-		goto disable_marimba_1;
-	}
-
-	rc = gpio_direction_output(TIMPANI_RESET_GPIO, 1);
-	if (rc < 0) {
-		pr_err("%s: gpio_direction_output failed (%d)\n",
-				__func__, rc);
-		msm_gpios_free(timpani_reset_gpio_cfg,
-				ARRAY_SIZE(timpani_reset_gpio_cfg));
-		goto disable_marimba_2;
-	}
-
-	return 0;
-
-disable_marimba_2:
-	regulator_disable(vreg_marimba_2);
-disable_marimba_1:
-	regulator_disable(vreg_marimba_1);
-out:
-	return rc;
-};
-
-static void msm_timpani_shutdown_power(void)
-{
-	int rc;
-
-	rc = regulator_disable(vreg_marimba_2);
-	if (rc)
-		pr_err("%s: regulator_disable failed (%d)\n", __func__, rc);
-
-	rc = regulator_disable(vreg_marimba_1);
-	if (rc)
-		pr_err("%s: regulator_disable failed (%d)\n", __func__, rc);
-
-	rc = gpio_direction_output(TIMPANI_RESET_GPIO, 0);
-	if (rc < 0)
-		pr_err("%s: gpio_direction_output failed (%d)\n",
-				__func__, rc);
-
-	msm_gpios_free(timpani_reset_gpio_cfg,
-				   ARRAY_SIZE(timpani_reset_gpio_cfg));
-};
 
 static unsigned int msm_bahama_core_config(int type)
 {
@@ -2091,12 +2013,6 @@ static struct regulator_bulk_data regs_tsadc_marimba[] = {
 	{ .supply = "s2",   .min_uV = 1300000, .max_uV = 1300000 },
 };
 
-static struct regulator_bulk_data regs_tsadc_timpani[] = {
-	{ .supply = "s3",   .min_uV = 1800000, .max_uV = 1800000 },
-	{ .supply = "gp12", .min_uV = 2200000, .max_uV = 2200000 },
-	{ .supply = "gp16", .min_uV = 1200000, .max_uV = 1200000 },
-};
-
 static struct regulator_bulk_data *regs_tsadc;
 static int regs_tsadc_count;
 
@@ -2168,10 +2084,6 @@ static int marimba_tsadc_init(void)
 	case MARIMBA_ID:
 		regs_tsadc = regs_tsadc_marimba;
 		regs_tsadc_count = ARRAY_SIZE(regs_tsadc_marimba);
-		break;
-	case TIMPANI_ID:
-		regs_tsadc = regs_tsadc_timpani;
-		regs_tsadc_count = ARRAY_SIZE(regs_tsadc_timpani);
 		break;
 	default:
 		pr_err("%s:Adie %d not supported\n",
@@ -2352,32 +2264,6 @@ static void __init msm7x30_init_marimba(void)
 	vreg_marimba_2 = regs[1].consumer;
 	vreg_bahama    = regs[2].consumer;
 }
-
-static struct marimba_codec_platform_data timpani_codec_pdata = {
-	.marimba_codec_power =  msm_marimba_codec_power,
-#ifdef CONFIG_TIMPANI_CODEC
-	.snddev_profile_init = msm_snddev_init_timpani,
-#endif
-};
-
-static struct marimba_platform_data timpani_pdata = {
-	.slave_id[MARIMBA_SLAVE_ID_CDC]	= MARIMBA_SLAVE_ID_CDC_ADDR,
-	.slave_id[MARIMBA_SLAVE_ID_QMEMBIST] = MARIMBA_SLAVE_ID_QMEMBIST_ADDR,
-	.marimba_setup = msm_timpani_setup_power,
-	.marimba_shutdown = msm_timpani_shutdown_power,
-	.codec = &timpani_codec_pdata,
-	.tsadc = &marimba_tsadc_pdata,
-	.tsadc_ssbi_adap = MARIMBA_SSBI_ADAP,
-};
-
-#define TIMPANI_I2C_SLAVE_ADDR	0xD
-
-static struct i2c_board_info msm_i2c_gsbi7_timpani_info[] = {
-	{
-		I2C_BOARD_INFO("timpani", TIMPANI_I2C_SLAVE_ADDR),
-		.platform_data = &timpani_pdata,
-	},
-};
 
 #ifdef CONFIG_MSM7KV2_AUDIO
 static struct resource msm_aictl_resources[] = {
@@ -6070,9 +5956,6 @@ static void __init msm7x30_init(void)
 
 	i2c_register_board_info(2, msm_marimba_board_info,
 			ARRAY_SIZE(msm_marimba_board_info));
-
-	i2c_register_board_info(2, msm_i2c_gsbi7_timpani_info,
-			ARRAY_SIZE(msm_i2c_gsbi7_timpani_info));
 
 	i2c_register_board_info(4 /* QUP ID */, msm_camera_boardinfo,
 				ARRAY_SIZE(msm_camera_boardinfo));
