@@ -332,6 +332,9 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 			}
 		}
 
+		if (di->setup_input_gpio)
+			di->setup_input_gpio();
+
 		ret = gpio_event_input_request_irqs(ds);
 
 		spin_lock_irqsave(&ds->irq_lock, irqflags);
