@@ -243,7 +243,7 @@ static int pm8058_gpios_init(void)
 	};
 
 	struct pm8xxx_gpio_init_info sdcc_det = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1),
+		PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_SDMC_CD_N),
 		{
 			.direction      = PM_GPIO_DIR_IN,
 			.pull           = PM_GPIO_PULL_UP_1P5,
@@ -258,7 +258,7 @@ static int pm8058_gpios_init(void)
 
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
-		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
+		pr_err("%s VIVO_GPIO_SDMC_CD_N config failed\n", __func__);
 		return rc;
 	}
 
@@ -5504,7 +5504,7 @@ static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
 {
 	return (unsigned int)
 		gpio_get_value_cansleep(
-			PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1));
+			PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_SDMC_CD_N);
 }
 
 static int msm_sdcc_get_wpswitch(struct device *dv)
@@ -5595,7 +5595,7 @@ static struct mmc_platform_data msm7x30_sdc4_data = {
 	.translate_vdd	= msm_sdcc_setup_power,
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
 	.status      = msm7x30_sdcc_slot_status,
-	.status_irq  = PM8058_GPIO_IRQ(PMIC8058_IRQ_BASE, PMIC_GPIO_SD_DET - 1),
+	.status_irq  = PM8058_GPIO_IRQ(PMIC8058_IRQ_BASE, VIVO_GPIO_SDMC_CD_N),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 	.wpswitch    = msm_sdcc_get_wpswitch,
 	.msmsdcc_fmin	= 144000,
