@@ -189,6 +189,7 @@ struct msm_mddi_bridge_platform_data {
 
 
 struct mdp_v4l2_req;
+struct mdp_overlay;
 int msm_fb_v4l2_enable(struct mdp_overlay *req, bool enable, void **par);
 int msm_fb_v4l2_update(void *par,
 	unsigned long srcp0_addr, unsigned long srcp0_size,
