@@ -124,7 +124,6 @@ static struct platform_device ion_dev;
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
-#define PMIC_GPIO_SD_DET	36
 #define PMIC_GPIO_SDC4_EN_N	17  /* PMIC GPIO Number 18 */
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
