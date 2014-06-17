@@ -25,6 +25,7 @@
 #include <asm/gpio.h>
 #include <mach/msm_rpcrouter.h>
 #include <mach/board.h>
+#include <linux/tps65200.h>
 
 #include "board-vivo.h"
 
@@ -414,6 +415,22 @@ static int htc_power_get_property(struct power_supply *psy,
 	return 0;
 }
 
+static void tps_int_notifier_func(int int_reg, int value);
+
+static struct tps65200_chg_int_notifier tps_int_notifier = {
+	.name = "htc_battery",
+	.func = tps_int_notifier_func,
+};
+
+static void tps_int_notifier_func(int int_reg, int value)
+{
+	if (int_reg == CHECK_INT1) {
+		power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
+	} else if (int_reg == CHECK_INT2) {
+		/* Empty */
+	}
+}
+
 static int htc_battery_get_charging_status(void)
 {
 	u32 level;
@@ -657,6 +674,9 @@ static int htc_battery_probe(struct platform_device *pdev)
 		if (rc)
 			printk(KERN_ERR "Failed to register power supply (%d)\n", rc);	
 	}
+
+	/* Register charging notifier for TPS65200 */
+	tps_register_notifier(&tps_int_notifier);
 
 	/* create htc detail attributes */
 	htc_battery_create_attrs(htc_power_supplies[CHARGER_BATTERY].dev);
