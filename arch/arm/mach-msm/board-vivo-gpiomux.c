@@ -13,8 +13,35 @@
 #include <mach/irqs.h>
 #include <mach/gpiomux.h>
 
-static int __init gpiomux_init(void)
+static struct gpiomux_setting mdp_vsync_cfg = {
+	.func = GPIOMUX_FUNC_1,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_DOWN,
+	.dir = GPIOMUX_IN,
+};
+
+static struct msm_gpiomux_config msm7x30_standard_configs[] __initdata = {
+	{
+		.gpio = 30,		/* VSYNC */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &mdp_vsync_cfg,
+		},
+	},
+};
+
+static int __init vivo_gpiomux_init(void)
 {
-	return msm_gpiomux_init(NR_GPIO_IRQS);
+	int rc = msm_gpiomux_init(NR_GPIO_IRQS);
+
+	if (rc) {
+		pr_err(KERN_ERR "msm_gpiomux_init failed %d\n", rc);
+		return rc;
+	}
+
+	msm_gpiomux_install(msm7x30_standard_configs,
+			ARRAY_SIZE(msm7x30_standard_configs));
+
+	return rc;
 }
-postcore_initcall(gpiomux_init);
+
+postcore_initcall(vivo_gpiomux_init);
