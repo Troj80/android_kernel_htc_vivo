@@ -246,19 +246,6 @@
 #define VIVO_SLEEP_CLK2			PMGPIO(39)
 #endif
 
-
-extern struct platform_device msm_device_mdp;
-extern struct platform_device msm_device_mddi0;
-extern int panel_type;
-
-int vivo_panel_sleep_in(void);
-#ifdef CONFIG_MICROP_COMMON
-void __init vivo_microp_init(void);
-#endif
-int vivo_init_mmc(unsigned int sys_rev);
-void __init vivo_audio_init(void);
 int __init vivo_init_keypad(void);
-int __init vivo_wifi_init(void);
-int __init vivo_init_panel(void);
 
 #endif /* __ARCH_ARM_MACH_MSM_BOARD_VIVO_H */
