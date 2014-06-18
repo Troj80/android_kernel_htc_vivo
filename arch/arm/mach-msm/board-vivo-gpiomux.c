@@ -13,6 +13,22 @@
 #include <mach/irqs.h>
 #include <mach/gpiomux.h>
 
+static struct gpiomux_setting keypad_power_key_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_4MA,
+	.pull = GPIOMUX_PULL_UP,
+	.dir = GPIOMUX_IN,
+};
+
+static struct msm_gpiomux_config vivo_standard_configs[] __initdata = {
+	{
+		.gpio = 46		/* VIVO_GPIO_KEYPAD_POWER_KEY */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &keypad_power_key_cfg,
+		},
+	},
+};
+
 static struct gpiomux_setting mdp_vsync_cfg = {
 	.func = GPIOMUX_FUNC_1,
 	.drv = GPIOMUX_DRV_2MA,
@@ -40,6 +56,9 @@ static int __init vivo_gpiomux_init(void)
 
 	msm_gpiomux_install(msm7x30_standard_configs,
 			ARRAY_SIZE(msm7x30_standard_configs));
+
+	msm_gpiomux_install(vivo_standard_configs,
+			ARRAY_SIZE(vivo_standard_configs));
 
 	return rc;
 }

@@ -46,14 +46,9 @@ static struct gpio_event_direct_entry vivo_keypad_input_map[] = {
 	},
 };
 
-uint32_t inputs_gpio_table[] = {
-	GPIO_CFG(VIVO_GPIO_KEYPAD_POWER_KEY, 0, GPIO_CFG_INPUT,
-		      GPIO_CFG_PULL_UP, GPIO_CFG_4MA),
-};
-
 static void vivo_setup_input_gpio(void)
 {
-	gpio_tlmm_config(inputs_gpio_table[0], GPIO_CFG_ENABLE);
+	gpio_request(46); /* VIVO_GPIO_KEYPAD_POWER_KEY */
 }
 
 static struct gpio_event_input_info vivo_keypad_input_info = {
