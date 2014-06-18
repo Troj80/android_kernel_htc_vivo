@@ -140,8 +140,6 @@
 #define VIVO_GPIO_UART2_RX 				(51)
 #define VIVO_GPIO_UART2_TX 				(52)
 
-#define VIVO_GPIO_KEYPAD_POWER_KEY		(46)
-
 /* Proximity */
 #define VIVO_GPIO_PROXIMITY_INT_N		(18)
 
