@@ -3125,7 +3125,9 @@ static struct msm_otg_platform_data msm_otg_pdata = {
 };
 
 #ifdef CONFIG_USB_GADGET
+static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0D, 0x1, 0x10, -1 };
 static struct msm_hsusb_gadget_platform_data msm_gadget_pdata = {
+	.phy_init_seq = phy_init_seq,
 	.is_phy_status_timer_on = 1,
 };
 #endif
