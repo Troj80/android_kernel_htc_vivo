@@ -22,7 +22,7 @@ static struct gpiomux_setting keypad_power_key_cfg = {
 
 static struct msm_gpiomux_config vivo_standard_configs[] __initdata = {
 	{
-		.gpio = 46		/* VIVO_GPIO_KEYPAD_POWER_KEY */
+		.gpio = 46,		/* VIVO_GPIO_KEYPAD_POWER_KEY */
 		.settings = {
 			[GPIOMUX_SUSPENDED] = &keypad_power_key_cfg,
 		},
