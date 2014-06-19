@@ -48,7 +48,7 @@ static struct gpio_event_direct_entry vivo_keypad_input_map[] = {
 
 static void vivo_setup_input_gpio(void)
 {
-	gpio_request(46); /* VIVO_GPIO_KEYPAD_POWER_KEY */
+	gpio_request(46, NULL); /* VIVO_GPIO_KEYPAD_POWER_KEY */
 }
 
 static struct gpio_event_input_info vivo_keypad_input_info = {
