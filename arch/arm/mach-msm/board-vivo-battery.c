@@ -26,6 +26,7 @@
 #include <mach/msm_rpcrouter.h>
 #include <mach/board.h>
 #include <linux/tps65200.h>
+#include <mach/msm_hsusb.h>
 
 #include "board-vivo.h"
 
@@ -279,6 +280,31 @@ int htc_battery_status_update(u32 curr_level)
 	if (notify)
 		power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
 	return 0;
+}
+
+void htc_batt_chg_connected(enum chg_type chgtype)
+{
+	switch (chgtype) {
+	case USB_CHG_TYPE__SDP:
+	case USB_CHG_TYPE__CARKIT:
+		BATT("Cable USB\n");
+		htc_batt_info.rep.charging_source = CHARGER_USB;
+		break;
+	case USB_CHG_TYPE__WALLCHARGER:
+		BATT("Cable AC\n");
+		htc_batt_info.rep.charging_source = CHARGER_AC;
+	case USB_CHG_TYPE__INVALID:
+		BATT("Invalid Charging source type\n");
+		break;
+	default:
+		BATT("Cable Not Present\n");
+		htc_batt_info.rep.charging_source = CHARGER_BATTERY;
+	}
+
+	/* if the power source changes, all power supplies may change state */
+	power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
+	power_supply_changed(&htc_power_supplies[CHARGER_USB]);
+	power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 }
 
 int htc_cable_status_update(int status)
