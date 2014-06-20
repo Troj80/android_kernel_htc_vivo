@@ -2585,6 +2585,7 @@ out:
 
 static struct android_usb_platform_data android_usb_pdata = {
 	.update_pid_and_serial_num = usb_diag_update_pid_and_serial_num,
+	.usb_core_id = 0,
 	.cdrom = 1,
 };
 
