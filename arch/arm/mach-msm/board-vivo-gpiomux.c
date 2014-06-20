@@ -20,7 +20,7 @@ static struct gpiomux_setting keypad_power_key_cfg = {
 	.dir = GPIOMUX_IN,
 };
 
-static struct msm_gpiomux_config vivo_standard_configs[] __initdata = {
+static struct msm_gpiomux_config vivo_keypad_configs[] __initdata = {
 	{
 		.gpio = 46,		/* VIVO_GPIO_KEYPAD_POWER_KEY */
 		.settings = {
@@ -36,7 +36,7 @@ static struct gpiomux_setting mdp_vsync_cfg = {
 	.dir = GPIOMUX_IN,
 };
 
-static struct msm_gpiomux_config msm7x30_standard_configs[] __initdata = {
+static struct msm_gpiomux_config msm7x30_vsync_configs[] __initdata = {
 	{
 		.gpio = 30,		/* VSYNC */
 		.settings = {
@@ -54,10 +54,10 @@ static int __init vivo_gpiomux_init(void)
 		return rc;
 	}
 
-	msm_gpiomux_install(msm7x30_standard_configs,
+	msm_gpiomux_install(msm7x30_vsync_configs,
 			ARRAY_SIZE(msm7x30_standard_configs));
 
-	msm_gpiomux_install(vivo_standard_configs,
+	msm_gpiomux_install(vivo_keypad_configs,
 			ARRAY_SIZE(vivo_standard_configs));
 
 	return rc;
