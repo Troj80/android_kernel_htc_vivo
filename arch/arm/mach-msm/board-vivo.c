@@ -3255,7 +3255,7 @@ static struct resource msm_v4l2_video_overlay_resources[] = {
 
 static int msm_fb_detect_panel(const char *name)
 {
-	return -EPERM;
+	return 0;
 }
 
 static struct msm_fb_platform_data msm_fb_pdata = {
