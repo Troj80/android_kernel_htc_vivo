@@ -29,6 +29,51 @@ static struct msm_gpiomux_config vivo_keypad_configs[] __initdata = {
 	},
 };
 
+static struct gpiomux_setting usb_id_output_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_4MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_HIGH,
+};
+
+static struct msm_gpiomux_config usb_id_output_configs[] __initdata = {
+	{
+		.gpio = 49,		/* VIVO_GPIO_USB_ID_PIN */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &usb_id_output_cfg,
+		},
+	},
+};
+
+static struct gpiomux_setting usb_id_input_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_4MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_IN,
+};
+
+static struct gpiomux_setting usb_id1_input_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_4MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_IN,
+};
+
+static struct msm_gpiomux_config usb_id_input_configs[] __initdata = {
+	{
+		.gpio = 49,		/* VIVO_GPIO_USB_ID_PIN */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &usb_id_input_cfg,
+		},
+	},
+	{
+		.gpio = 145,		/* VIVO_GPIO_USB_ID1_PIN */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &usb_id1_input_cfg,
+		},
+	},
+};
+
 static struct gpiomux_setting mdp_vsync_cfg = {
 	.func = GPIOMUX_FUNC_1,
 	.drv = GPIOMUX_DRV_2MA,
@@ -55,10 +100,16 @@ static int __init vivo_gpiomux_init(void)
 	}
 
 	msm_gpiomux_install(msm7x30_vsync_configs,
-			ARRAY_SIZE(msm7x30_standard_configs));
+			ARRAY_SIZE(msm7x30_vsync_configs));
 
 	msm_gpiomux_install(vivo_keypad_configs,
-			ARRAY_SIZE(vivo_standard_configs));
+			ARRAY_SIZE(vivo_keypad_configs));
+
+	msm_gpiomux_install(usb_id_output_configs,
+			ARRAY_SIZE(usb_id_output_configs));
+
+	msm_gpiomux_install(usb_id_input_configs,
+			ARRAY_SIZE(usb_id_input_configs));
 
 	return rc;
 }
