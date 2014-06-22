@@ -2809,27 +2809,6 @@ static struct platform_device qsd_device_spi = {
 	.resource	= qsd_spi_resources,
 };
 
-#ifdef CONFIG_SPI_QSD
-static struct spi_board_info lcdc_sharp_spi_board_info[] __initdata = {
-	{
-		.modalias	= "lcdc_sharp_ls038y7dx01",
-		.mode		= SPI_MODE_1,
-		.bus_num	= 0,
-		.chip_select	= 0,
-		.max_speed_hz	= 26331429,
-	}
-};
-static struct spi_board_info lcdc_toshiba_spi_board_info[] __initdata = {
-	{
-		.modalias       = "lcdc_toshiba_ltm030dd40",
-		.mode           = SPI_MODE_3|SPI_CS_HIGH,
-		.bus_num        = 0,
-		.chip_select    = 0,
-		.max_speed_hz   = 9963243,
-	}
-};
-#endif
-
 static struct msm_gpio qsd_spi_gpio_config_data[] = {
 	{ GPIO_CFG(45, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_clk" },
 	{ GPIO_CFG(46, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_cs0" },
@@ -3050,50 +3029,6 @@ static struct platform_device android_pmem_device = {
 	.name = "android_pmem",
 	.id = 0,
 	.dev = { .platform_data = &android_pmem_pdata },
-};
-
-#ifndef CONFIG_SPI_QSD
-static int lcdc_gpio_array_num[] = {
-				45, /* spi_clk */
-				46, /* spi_cs  */
-				47, /* spi_mosi */
-				48, /* spi_miso */
-				};
-
-static struct msm_gpio lcdc_gpio_config_data[] = {
-	{ GPIO_CFG(45, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_clk" },
-	{ GPIO_CFG(46, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_cs0" },
-	{ GPIO_CFG(47, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_mosi" },
-	{ GPIO_CFG(48, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_miso" },
-};
-
-static void lcdc_config_gpios(int enable)
-{
-	if (enable) {
-		msm_gpios_request_enable(lcdc_gpio_config_data,
-					      ARRAY_SIZE(
-						      lcdc_gpio_config_data));
-	} else
-		msm_gpios_disable_free(lcdc_gpio_config_data,
-					    ARRAY_SIZE(
-						    lcdc_gpio_config_data));
-}
-#endif
-
-static struct msm_panel_common_pdata lcdc_sharp_panel_data = {
-#ifndef CONFIG_SPI_QSD
-	.panel_config_gpio = lcdc_config_gpios,
-	.gpio_num          = lcdc_gpio_array_num,
-#endif
-	.gpio = 2, 	/* LPG PMIC_GPIO26 channel number */
-};
-
-static struct platform_device lcdc_sharp_panel_device = {
-	.name   = "lcdc_sharp_wvga",
-	.id     = 0,
-	.dev    = {
-		.platform_data = &lcdc_sharp_panel_data,
-	}
 };
 
 static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
@@ -3680,190 +3615,14 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mem_hid = MEMTYPE_EBI0,
 };
 
-static int lcd_panel_spi_gpio_num[] = {
-			45, /* spi_clk */
-			46, /* spi_cs  */
-			47, /* spi_mosi */
-			48, /* spi_miso */
-		};
-
-static struct msm_gpio lcd_panel_gpios[] = {
-/* Workaround, since HDMI_INT is using the same GPIO line (18), and is used as
- * input.  if there is a hardware revision; we should reassign this GPIO to a
- * new open line; and removing it will just ensure that this will be missed in
- * the future.
-	{ GPIO_CFG(18, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn0" },
- */
-	{ GPIO_CFG(19, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn1" },
-	{ GPIO_CFG(20, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu0" },
-	{ GPIO_CFG(21, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu1" },
-	{ GPIO_CFG(22, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu2" },
-	{ GPIO_CFG(23, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red0" },
-	{ GPIO_CFG(24, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red1" },
-	{ GPIO_CFG(25, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red2" },
-#ifndef CONFIG_SPI_QSD
-	{ GPIO_CFG(45, 0, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_clk" },
-	{ GPIO_CFG(46, 0, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_cs0" },
-	{ GPIO_CFG(47, 0, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_mosi" },
-	{ GPIO_CFG(48, 0, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_miso" },
-#endif
-	{ GPIO_CFG(90, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_pclk" },
-	{ GPIO_CFG(91, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_en" },
-	{ GPIO_CFG(92, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_vsync" },
-	{ GPIO_CFG(93, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_hsync" },
-	{ GPIO_CFG(94, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn2" },
-	{ GPIO_CFG(95, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn3" },
-	{ GPIO_CFG(96, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn4" },
-	{ GPIO_CFG(97, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn5" },
-	{ GPIO_CFG(98, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn6" },
-	{ GPIO_CFG(99, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn7" },
-	{ GPIO_CFG(100, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu3" },
-	{ GPIO_CFG(101, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu4" },
-	{ GPIO_CFG(102, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu5" },
-	{ GPIO_CFG(103, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu6" },
-	{ GPIO_CFG(104, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu7" },
-	{ GPIO_CFG(105, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red3" },
-	{ GPIO_CFG(106, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red4" },
-	{ GPIO_CFG(107, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red5" },
-	{ GPIO_CFG(108, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red6" },
-	{ GPIO_CFG(109, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red7" },
-};
-
-static struct msm_gpio lcd_sharp_panel_gpios[] = {
-	{ GPIO_CFG(22, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu2" },
-	{ GPIO_CFG(25, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red2" },
-	{ GPIO_CFG(90, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_pclk" },
-	{ GPIO_CFG(91, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_en" },
-	{ GPIO_CFG(92, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_vsync" },
-	{ GPIO_CFG(93, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_hsync" },
-	{ GPIO_CFG(94, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn2" },
-	{ GPIO_CFG(95, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn3" },
-	{ GPIO_CFG(96, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn4" },
-	{ GPIO_CFG(97, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn5" },
-	{ GPIO_CFG(98, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn6" },
-	{ GPIO_CFG(99, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_grn7" },
-	{ GPIO_CFG(100, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu3" },
-	{ GPIO_CFG(101, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu4" },
-	{ GPIO_CFG(102, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu5" },
-	{ GPIO_CFG(103, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu6" },
-	{ GPIO_CFG(104, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_blu7" },
-	{ GPIO_CFG(105, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red3" },
-	{ GPIO_CFG(106, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red4" },
-	{ GPIO_CFG(107, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red5" },
-	{ GPIO_CFG(108, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red6" },
-	{ GPIO_CFG(109, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcdc_red7" },
-};
-
-static int lcdc_toshiba_panel_power(int on)
-{
-	int rc, i;
-	struct msm_gpio *gp;
-
-	rc = display_common_power(on);
-	if (rc < 0) {
-		printk(KERN_ERR "%s display_common_power failed: %d\n",
-				__func__, rc);
-		return rc;
-	}
-
-	if (on) {
-		rc = msm_gpios_enable(lcd_panel_gpios,
-				ARRAY_SIZE(lcd_panel_gpios));
-		if (rc < 0) {
-			printk(KERN_ERR "%s: gpio enable failed: %d\n",
-					__func__, rc);
-		}
-	} else {	/* off */
-		gp = lcd_panel_gpios;
-		for (i = 0; i < ARRAY_SIZE(lcd_panel_gpios); i++) {
-			/* ouput low */
-			gpio_set_value(GPIO_PIN(gp->gpio_cfg), 0);
-			gp++;
-		}
-	}
-
-	return rc;
-}
-
-static int lcdc_sharp_panel_power(int on)
-{
-	int rc, i;
-	struct msm_gpio *gp;
-
-	rc = display_common_power(on);
-	if (rc < 0) {
-		printk(KERN_ERR "%s display_common_power failed: %d\n",
-				__func__, rc);
-		return rc;
-	}
-
-	if (on) {
-		rc = msm_gpios_enable(lcd_sharp_panel_gpios,
-				ARRAY_SIZE(lcd_sharp_panel_gpios));
-		if (rc < 0) {
-			printk(KERN_ERR "%s: gpio enable failed: %d\n",
-				__func__, rc);
-		}
-	} else {	/* off */
-		gp = lcd_sharp_panel_gpios;
-		for (i = 0; i < ARRAY_SIZE(lcd_sharp_panel_gpios); i++) {
-			/* ouput low */
-			gpio_set_value(GPIO_PIN(gp->gpio_cfg), 0);
-			gp++;
-		}
-	}
-
-	return rc;
-}
-
-static int lcdc_panel_power(int on)
-{
-	int flag_on = !!on;
-	static int lcdc_power_save_on, lcdc_power_initialized;
-
-	if (lcdc_power_save_on == flag_on)
-		return 0;
-
-	lcdc_power_save_on = flag_on;
-
-	if (unlikely(!lcdc_power_initialized)) {
-		quickvx_mddi_client = 0;
-		regulator_put(mddi_ldo20);
-		display_common_init();
-		lcdc_power_initialized = 1;
-	}
-
-	if (machine_is_msm7x30_fluid())
-		return lcdc_sharp_panel_power(on);
-	else
-		return lcdc_toshiba_panel_power(on);
-}
-
-static struct lcdc_platform_data lcdc_pdata = {
-	.lcdc_power_save   = lcdc_panel_power,
-};
-
 static void __init msm_fb_add_devices(void)
 {
 	msm_fb_register_device("mdp", &mdp_pdata);
 	msm_fb_register_device("pmdh", &mddi_pdata);
-	msm_fb_register_device("lcdc", &lcdc_pdata);
 #ifdef CONFIG_FB_MSM_TVOUT
 	msm_fb_register_device("tvout_device", NULL);
 #endif
 }
-
-static struct msm_panel_common_pdata lcdc_toshiba_panel_data = {
-	.gpio_num          = lcd_panel_spi_gpio_num,
-};
-
-static struct platform_device lcdc_toshiba_panel_device = {
-	.name   = "lcdc_toshiba_wvga",
-	.id     = 0,
-	.dev    = {
-		.platform_data = &lcdc_toshiba_panel_data,
-	}
-};
 
 #if defined(CONFIG_MARIMBA_CORE) && \
    (defined(CONFIG_MSM_BT_POWER) || defined(CONFIG_MSM_BT_POWER_MODULE))
@@ -4442,11 +4201,9 @@ static struct platform_device *devices[] __initdata = {
 #endif
 	&msm_migrate_pages_device,
 	&mddi_toshiba_device,
-	&lcdc_toshiba_panel_device,
 #ifdef CONFIG_MSM_ROTATOR
 	&msm_rotator_device,
 #endif
-	&lcdc_sharp_panel_device,
 	&android_pmem_adsp_device,
 	&android_pmem_audio_device,
 	&msm_device_i2c,
@@ -5728,15 +5485,6 @@ static void __init msm7x30_init(void)
 	gpio_set_value(VIVO_GPIO_EMMC_RST, 0);
 	msleep(100);
 	gpio_set_value(VIVO_GPIO_EMMC_RST, 1);
-
-#ifdef CONFIG_SPI_QSD
-	if (machine_is_msm7x30_fluid())
-		spi_register_board_info(lcdc_sharp_spi_board_info,
-			ARRAY_SIZE(lcdc_sharp_spi_board_info));
-	else
-		spi_register_board_info(lcdc_toshiba_spi_board_info,
-			ARRAY_SIZE(lcdc_toshiba_spi_board_info));
-#endif
 
 	sensors_ldo_init();
 	msm_fb_add_devices();
