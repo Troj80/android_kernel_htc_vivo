@@ -124,7 +124,6 @@ static struct platform_device ion_dev;
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
-#define PMIC_GPIO_SDC4_EN_N	17  /* PMIC GPIO Number 18 */
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
 
@@ -132,18 +131,12 @@ static struct platform_device ion_dev;
 #define OPTNAV_I2C_SLAVE_ADDR	(0xB0 >> 1)
 #define OPTNAV_IRQ		20
 #define OPTNAV_CHIP_SELECT	19
-#define PMIC_GPIO_SDC4_PWR_EN_N 24  /* PMIC GPIO Number 25 */
 
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
 #define PM8058_GPIO_SYS_TO_PM(sys_gpio)    (sys_gpio - NR_GPIO_IRQS)
 #define PM8058_MPP_BASE			   PM8058_GPIO_PM_TO_SYS(PM8058_GPIOS)
 #define PM8058_MPP_PM_TO_SYS(pm_gpio)	   (pm_gpio + PM8058_MPP_BASE)
-
-#define PMIC_GPIO_FLASH_BOOST_ENABLE	15	/* PMIC GPIO Number 16 */
-#define PMIC_GPIO_HAP_ENABLE   16  /* PMIC GPIO Number 17 */
-
-#define PMIC_GPIO_WLAN_EXT_POR  22 /* PMIC GPIO NUMBER 23 */
 
 #define BMA150_GPIO_INT 1
 
@@ -172,72 +165,6 @@ static int pm8058_gpios_init(void)
 {
 	int rc;
 
-	struct pm8xxx_gpio_init_info sdc4_en = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC4_EN_N),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = PM8058_GPIO_VIN_L5,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-			.out_strength   = PM_GPIO_STRENGTH_LOW,
-			.output_value   = 0,
-		},
-	};
-
-	struct pm8xxx_gpio_init_info sdc4_pwr_en = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC4_PWR_EN_N),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = PM8058_GPIO_VIN_L5,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-			.out_strength   = PM_GPIO_STRENGTH_LOW,
-			.output_value   = 0,
-		},
-	};
-
-	struct pm8xxx_gpio_init_info haptics_enable = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_HAP_ENABLE),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.out_strength   = PM_GPIO_STRENGTH_HIGH,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-			.vin_sel        = 2,
-			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-			.output_value   = 0,
-		},
-	};
-
-	struct pm8xxx_gpio_init_info flash_boost_enable = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_FLASH_BOOST_ENABLE),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-			.output_value   = 0,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = PM8058_GPIO_VIN_S3,
-			.out_strength   = PM_GPIO_STRENGTH_HIGH,
-			.function        = PM_GPIO_FUNC_2,
-		},
-	};
-
-	struct pm8xxx_gpio_init_info gpio23 = {
-		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_WLAN_EXT_POR),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-			.output_value   = 0,
-			.pull           = PM_GPIO_PULL_NO,
-			.vin_sel        = 2,
-			.out_strength   = PM_GPIO_STRENGTH_LOW,
-			.function       = PM_GPIO_FUNC_NORMAL,
-		}
-	};
-
 	struct pm8xxx_gpio_init_info sdcc_det = {
 		PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_SDMC_CD_N),
 		{
@@ -249,70 +176,10 @@ static int pm8058_gpios_init(void)
 		},
 	};
 
-	if (machine_is_msm7x30_fluid())
-		sdcc_det.config.inv_int_pol = 1;
-
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
 		pr_err("%s VIVO_GPIO_SDMC_CD_N config failed\n", __func__);
 		return rc;
-	}
-
-	/* Deassert GPIO#23 (source for Ext_POR on WLAN-Volans) */
-	rc = pm8xxx_gpio_config(gpio23.gpio, &gpio23.config);
-	if (rc) {
-		pr_err("%s PMIC_GPIO_WLAN_EXT_POR config failed\n", __func__);
-		return rc;
-	}
-
-	if (machine_is_msm7x30_fluid()) {
-		/* Haptics gpio */
-		rc = pm8xxx_gpio_config(haptics_enable.gpio,
-						&haptics_enable.config);
-		if (rc) {
-			pr_err("%s: PMIC GPIO %d write failed\n", __func__,
-							haptics_enable.gpio);
-			return rc;
-		}
-		/* Flash boost gpio */
-		rc = pm8xxx_gpio_config(flash_boost_enable.gpio,
-						&flash_boost_enable.config);
-		if (rc) {
-			pr_err("%s: PMIC GPIO %d write failed\n", __func__,
-						flash_boost_enable.gpio);
-			return rc;
-		}
-		/* SCD4 gpio */
-		rc = pm8xxx_gpio_config(sdc4_en.gpio, &sdc4_en.config);
-		if (rc) {
-			pr_err("%s PMIC_GPIO_SDC4_EN_N config failed\n",
-								 __func__);
-			return rc;
-		}
-		rc = gpio_request(sdc4_en.gpio, "sdc4_en");
-		if (rc) {
-			pr_err("%s PMIC_GPIO_SDC4_EN_N gpio_request failed\n",
-				__func__);
-			return rc;
-		}
-		gpio_set_value_cansleep(sdc4_en.gpio, 0);
-	}
-	/* FFA -> gpio_25 controls vdd of sdcc4 */
-	else {
-		/* SCD4 gpio_25 */
-		rc = pm8xxx_gpio_config(sdc4_pwr_en.gpio, &sdc4_pwr_en.config);
-		if (rc) {
-			pr_err("%s PMIC_GPIO_SDC4_PWR_EN_N config failed: %d\n",
-			       __func__, rc);
-			return rc;
-		}
-
-		rc = gpio_request(sdc4_pwr_en.gpio, "sdc4_pwr_en");
-		if (rc) {
-			pr_err("PMIC_GPIO_SDC4_PWR_EN_N gpio_req failed: %d\n",
-			       rc);
-			return rc;
-		}
 	}
 
 	return 0;
@@ -1016,9 +883,6 @@ static int config_camera_on_gpios(void)
 	if (machine_is_msm7x30_fluid()) {
 		config_gpio_table(camera_on_gpio_fluid_table,
 			ARRAY_SIZE(camera_on_gpio_fluid_table));
-		/* FLUID: turn on 5V booster */
-		gpio_set_value(
-			PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_FLASH_BOOST_ENABLE), 1);
 		/* FLUID: drive high to put secondary sensor to STANDBY */
 		gpio_set_value(CAM_STNDBY, 1);
 	}
@@ -1039,9 +903,6 @@ static void config_camera_off_gpios(void)
 	if (machine_is_msm7x30_fluid()) {
 		config_gpio_table(camera_off_gpio_fluid_table,
 			ARRAY_SIZE(camera_off_gpio_fluid_table));
-		/* FLUID: turn off 5V booster */
-		gpio_set_value(
-			PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_FLASH_BOOST_ENABLE), 0);
 	}
 }
 
@@ -4931,22 +4792,6 @@ static uint32_t msm_sdcc_setup_vreg(int dev_id, unsigned int enable)
 
 	if (test_bit(dev_id, &vreg_sts) == enable)
 		return rc;
-
-	if (dev_id == 4) {
-		if (enable) {
-			pr_debug("Enable Vdd dev_%d\n", dev_id);
-			gpio_set_value_cansleep(
-				PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC4_PWR_EN_N),
-						0);
-			set_bit(dev_id, &vreg_sts);
-		} else {
-			pr_debug("Disable Vdd dev_%d\n", dev_id);
-			gpio_set_value_cansleep(
-				PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC4_PWR_EN_N),
-				1);
-			clear_bit(dev_id, &vreg_sts);
-		}
-	}
 
 	if (!enable || enabled_once[dev_id - 1])
 			return 0;
