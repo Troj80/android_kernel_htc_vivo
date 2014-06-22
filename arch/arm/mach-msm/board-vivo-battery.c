@@ -320,14 +320,17 @@ int htc_cable_status_update(int status)
 	case CHARGER_BATTERY:
 		BATT("cable NOT PRESENT\n");
 		htc_batt_info.rep.charging_source = CHARGER_BATTERY;
+		power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
 		break;
 	case CHARGER_USB:
 		BATT("cable USB\n");
 		htc_batt_info.rep.charging_source = CHARGER_USB;
+		power_supply_changed(&htc_power_supplies[CHARGER_USB]);
 		break;
 	case CHARGER_AC:
 		BATT("cable AC\n");
 		htc_batt_info.rep.charging_source = CHARGER_AC;
+		power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 		break;
 	default:
 		printk(KERN_ERR "%s: Not supported cable status received!\n",
@@ -347,10 +350,7 @@ int htc_cable_status_update(int status)
 		wake_lock_timeout(&vbus_wake_lock, HZ / 2);
 	}
 
-	/* if the power source changes, all power supplies may change state */
-	power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
-	power_supply_changed(&htc_power_supplies[CHARGER_USB]);
-	power_supply_changed(&htc_power_supplies[CHARGER_AC]);
+	tps65200_mask_interrupt_register(status);
 
 	return rc;
 }
