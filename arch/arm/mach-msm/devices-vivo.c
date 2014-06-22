@@ -42,6 +42,8 @@
 #include "pm.h"
 #include "irq.h"
 
+#include "board-vivo.h"
+
 struct platform_device msm7x30_device_acpuclk = {
 	.name		= "acpuclk-7x30",
 	.id		= -1,
@@ -1363,6 +1365,44 @@ struct platform_device *msm_footswitch_devices[] = {
 	FS_PCOM(FS_VPE,    "fs_vpe",    NULL),
 };
 unsigned msm_num_footswitch_devices = ARRAY_SIZE(msm_footswitch_devices);
+
+static int mfg_mode;
+int __init board_mfg_mode_init(char *s)
+{
+	if (!strcmp(s, "normal"))
+		mfg_mode = 0;
+	else if (!strcmp(s, "factory2"))
+		mfg_mode = 1;
+	else if (!strcmp(s, "recovery"))
+		mfg_mode = 2;
+	else if (!strcmp(s, "charge"))
+		mfg_mode = 3;
+
+	return 1;
+}
+__setup("androidboot.mode=", board_mfg_mode_init);
+
+
+int board_mfg_mode(void)
+{
+	return mfg_mode;
+}
+
+static char *df_serialno = "000000000000";
+
+static int __init board_serialno_setup(char *serialno)
+{
+	char *str;
+
+	if (board_mfg_mode() || !strlen(serialno))
+		str = df_serialno;
+	else
+		str = serialno;
+
+	return 1;
+}
+
+__setup("androidboot.serialno=", board_serialno_setup);
 
 static struct resource gpio_resources[] = {
 	{
