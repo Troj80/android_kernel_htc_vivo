@@ -124,11 +124,6 @@ static struct platform_device ion_dev;
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
 
-#define FPGA_OPTNAV_GPIO_ADDR	0x8E000026
-#define OPTNAV_I2C_SLAVE_ADDR	(0xB0 >> 1)
-#define OPTNAV_IRQ		20
-#define OPTNAV_CHIP_SELECT	19
-
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
 #define PM8058_GPIO_SYS_TO_PM(sys_gpio)    (sys_gpio - NR_GPIO_IRQS)
@@ -2021,118 +2016,6 @@ static struct platform_device android_usb_device = {
 };
 #endif
 
-static struct msm_gpio optnav_config_data[] = {
-	{ GPIO_CFG(OPTNAV_CHIP_SELECT, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),
-	"optnav_chip_select" },
-};
-
-static struct regulator_bulk_data optnav_regulators[] = {
-	{ .supply = "gp7", .min_uV = 1800000, .max_uV = 1800000 },
-	{ .supply = "gp4", .min_uV = 2600000, .max_uV = 2600000 },
-	{ .supply = "gp9", .min_uV = 1800000, .max_uV = 1800000 },
-	{ .supply = "usb", .min_uV = 3300000, .max_uV = 3300000 },
-};
-
-static void __iomem *virtual_optnav;
-
-static int optnav_gpio_setup(void)
-{
-	int rc = -ENODEV;
-	rc = msm_gpios_request_enable(optnav_config_data,
-			ARRAY_SIZE(optnav_config_data));
-
-	if (rc)
-		return rc;
-
-	/* Configure the FPGA for GPIOs */
-	virtual_optnav = ioremap(FPGA_OPTNAV_GPIO_ADDR, 0x4);
-	if (!virtual_optnav) {
-		pr_err("%s:Could not ioremap region\n", __func__);
-		return -ENOMEM;
-	}
-	/*
-	 * Configure the FPGA to set GPIO 19 as
-	 * normal, active(enabled), output(MSM to SURF)
-	 */
-	writew(0x311E, virtual_optnav);
-
-	rc = regulator_bulk_get(NULL, ARRAY_SIZE(optnav_regulators),
-			optnav_regulators);
-	if (rc)
-		return rc;
-
-	rc = regulator_bulk_set_voltage(ARRAY_SIZE(optnav_regulators),
-			optnav_regulators);
-
-	if (rc)
-		goto regulator_put;
-
-	return rc;
-
-regulator_put:
-	regulator_bulk_free(ARRAY_SIZE(optnav_regulators), optnav_regulators);
-	return rc;
-}
-
-static void optnav_gpio_release(void)
-{
-	msm_gpios_disable_free(optnav_config_data,
-		ARRAY_SIZE(optnav_config_data));
-	iounmap(virtual_optnav);
-	regulator_bulk_free(ARRAY_SIZE(optnav_regulators), optnav_regulators);
-}
-
-static int optnav_enable(void)
-{
-	int rc;
-	/*
-	 * Enable the VREGs L8(gp7), L10(gp4), L12(gp9), L6(usb)
-	 * for I2C communication with keyboard.
-	 */
-
-	rc = regulator_bulk_enable(ARRAY_SIZE(optnav_regulators),
-			optnav_regulators);
-
-	if (rc)
-		return rc;
-
-	/* Enable the chip select GPIO */
-	gpio_set_value(OPTNAV_CHIP_SELECT, 1);
-	gpio_set_value(OPTNAV_CHIP_SELECT, 0);
-
-	return 0;
-}
-
-static void optnav_disable(void)
-{
-	regulator_bulk_disable(ARRAY_SIZE(optnav_regulators),
-			optnav_regulators);
-
-	gpio_set_value(OPTNAV_CHIP_SELECT, 1);
-}
-
-static struct ofn_atlab_platform_data optnav_data = {
-	.gpio_setup    = optnav_gpio_setup,
-	.gpio_release  = optnav_gpio_release,
-	.optnav_on     = optnav_enable,
-	.optnav_off    = optnav_disable,
-	.rotate_xy     = 0,
-	.function1 = {
-		.no_motion1_en		= true,
-		.touch_sensor_en	= true,
-		.ofn_en			= true,
-		.clock_select_khz	= 1500,
-		.cpi_selection		= 1200,
-	},
-	.function2 =  {
-		.invert_y		= false,
-		.invert_x		= true,
-		.swap_x_y		= false,
-		.hold_a_b_en		= true,
-		.motion_filter_en       = true,
-	},
-};
-
 #ifdef CONFIG_BOSCH_BMA150
 
 static struct regulator_bulk_data sensors_ldo[] = {
@@ -2203,14 +2086,6 @@ static struct i2c_board_info bma150_board_info[] __initdata = {
 	},
 };
 #endif
-
-static struct i2c_board_info msm_i2c_board_info[] = {
-	{
-		I2C_BOARD_INFO("m33c01", OPTNAV_I2C_SLAVE_ADDR),
-		.irq		= MSM_GPIO_TO_INT(OPTNAV_IRQ),
-		.platform_data = &optnav_data,
-	},
-};
 
 static struct i2c_board_info msm_marimba_board_info[] = {
 	{
@@ -4972,8 +4847,6 @@ static struct i2c_board_info cy8ctma300_board_info[] = {
 
 static void __init msm7x30_init(void)
 {
-	struct proc_dir_entry *entry = NULL;
-	int rc;
 	unsigned smem_size;
 
 	uint32_t soc_version = 0;
@@ -5048,15 +4921,9 @@ static void __init msm7x30_init(void)
 	aux_pcm_gpio_init();
 #endif
 
-	i2c_register_board_info(0, msm_i2c_board_info,
-			ARRAY_SIZE(msm_i2c_board_info));
-
 	i2c_register_board_info(0, i2c_tps_devices,
 			ARRAY_SIZE(i2c_tps_devices));
 
-	if (machine_is_msm7x30_fluid())
-		i2c_register_board_info(0, cy8info,
-					ARRAY_SIZE(cy8info));
 #ifdef CONFIG_BOSCH_BMA150
 	if (machine_is_msm7x30_fluid())
 		i2c_register_board_info(0, bma150_board_info,
