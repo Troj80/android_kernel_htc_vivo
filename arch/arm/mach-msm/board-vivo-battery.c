@@ -284,27 +284,27 @@ int htc_battery_status_update(u32 curr_level)
 
 void htc_batt_chg_connected(enum chg_type chgtype)
 {
-	mutex_lock(htc_batt_info.lock);
 	switch (chgtype) {
 	case USB_CHG_TYPE__SDP:
 	case USB_CHG_TYPE__CARKIT:
 		BATT("Cable USB\n");
 		htc_batt_info.rep.charging_source = CHARGER_USB;
-		power_supply_changed(&htc_power_supplies[CHARGER_USB]);
 		break;
 	case USB_CHG_TYPE__WALLCHARGER:
 		BATT("Cable AC\n");
 		htc_batt_info.rep.charging_source = CHARGER_AC;
-		power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 	case USB_CHG_TYPE__INVALID:
 		BATT("Invalid Charging source type\n");
 		break;
 	default:
 		BATT("Cable Not Present\n");
 		htc_batt_info.rep.charging_source = CHARGER_BATTERY;
-		power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
 	}
-	mutex_unlock(htc_batt_info.lock);
+
+	/* if the power source changes, all power supplies may change state */
+	power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
+	power_supply_changed(&htc_power_supplies[CHARGER_USB]);
+	power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 }
 
 int htc_cable_status_update(int status)
