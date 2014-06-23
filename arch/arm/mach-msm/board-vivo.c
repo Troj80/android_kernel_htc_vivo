@@ -120,7 +120,6 @@ static struct platform_device ion_dev;
 #define MSM_ION_HEAP_NUM	5
 #endif
 
-#define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
 
 #define FPGA_SDCC_STATUS       0x8E0001A8
@@ -1214,10 +1213,10 @@ int mi2s_unconfig_clk_gpio(void)
 
 static int __init buses_init(void)
 {
-	if (gpio_tlmm_config(GPIO_CFG(PMIC_GPIO_INT, 1, GPIO_CFG_INPUT,
+	if (gpio_tlmm_config(GPIO_CFG(VIVO_PMIC_GPIO_INT, 1, GPIO_CFG_INPUT,
 				  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE))
 		pr_err("%s: gpio_tlmm_config (gpio=%d) failed\n",
-		       __func__, PMIC_GPIO_INT);
+		       __func__, VIVO_PMIC_GPIO_INT);
 
 	pm8058_7x30_data.keypad_pdata = &surf_keypad_data;
 
