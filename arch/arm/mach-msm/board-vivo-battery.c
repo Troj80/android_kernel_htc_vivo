@@ -69,15 +69,6 @@ typedef enum {
 	ENABLE_FAST_CHG
 } batt_ctl_t;
 
-/* This order is the same as htc_power_supplies[]
- * And it's also the same as htc_cable_status_update()
- */
-typedef enum {
-	CHARGER_BATTERY = 0,
-	CHARGER_USB,
-	CHARGER_AC
-} charger_type_t;
-
 struct battery_info_reply {
 	u32 batt_id;		/* Battery ID from ADC */
 	u32 batt_vol;		/* Battery voltage from ADC */
@@ -289,23 +280,23 @@ void htc_batt_chg_connected(enum chg_type chgtype)
 	case USB_CHG_TYPE__CARKIT:
 		BATT("Cable USB\n");
 		htc_batt_info.rep.charging_source = CHARGER_USB;
+		power_supply_changed(&htc_power_supplies[CHARGER_USB]);
 		break;
 	case USB_CHG_TYPE__WALLCHARGER:
 		BATT("Cable AC\n");
 		htc_batt_info.rep.charging_source = CHARGER_AC;
+		power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 	case USB_CHG_TYPE__INVALID:
 		BATT("Invalid Charging source type\n");
 		break;
 	default:
 		BATT("Cable Not Present\n");
 		htc_batt_info.rep.charging_source = CHARGER_BATTERY;
+		power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
 	}
-
-	/* if the power source changes, all power supplies may change state */
-	power_supply_changed(&htc_power_supplies[CHARGER_BATTERY]);
-	power_supply_changed(&htc_power_supplies[CHARGER_USB]);
-	power_supply_changed(&htc_power_supplies[CHARGER_AC]);
 }
+
+extern int tps65200_mask_interrupt_register(int status);
 
 int htc_cable_status_update(int status)
 {

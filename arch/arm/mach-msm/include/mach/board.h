@@ -27,6 +27,15 @@
 #include <linux/msm_ssbi.h>
 #include <mach/msm_bus.h>
 
+/* This order is the same as htc_power_supplies[]
+ * And it's also the same as htc_cable_status_update()
+ */
+typedef enum {
+	CHARGER_BATTERY = 0,
+	CHARGER_USB,
+	CHARGER_AC
+} charger_type_t;
+
 struct msm_camera_io_ext {
 	uint32_t mdcphy;
 	uint32_t mdcsz;

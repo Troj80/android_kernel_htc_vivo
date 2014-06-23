@@ -320,7 +320,7 @@ static void set_vdpm(struct work_struct *work)
 		tps_set_charger_ctrl(VDPM_ORIGIN_V);
 }
 
-#if (defined(CONFIG_BATTERY_DS2746) || defined(CONFIG_BATTERY_MAX17050))
+#if (defined(CONFIG_TPS65200) || defined(CONFIG_BATTERY_DS2746) || defined(CONFIG_BATTERY_MAX17050))
 int tps65200_mask_interrupt_register(int status)
 {
 	if (status == CHARGER_USB) {	
@@ -328,7 +328,7 @@ int tps65200_mask_interrupt_register(int status)
 	} else if (status == CHARGER_BATTERY) {
 		tps65200_i2c_write_byte(0xFF, 0x0C);
 		
-		reverse_protection_handler(REVERSE_PROTECTION_CONTER_CLEAR);
+		//reverse_protection_handler(REVERSE_PROTECTION_CONTER_CLEAR);
 	}
 	return 0;
 }
