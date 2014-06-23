@@ -149,9 +149,6 @@ static struct platform_device ion_dev;
 #define DDR1_BANK_BASE 0X20000000
 #define DDR2_BANK_BASE 0X40000000
 
-extern int emmc_partition_read_proc(char *page, char **start, off_t off,
-					int count, int *eof, void *data);
-
 static unsigned int phys_add = DDR2_BANK_BASE;
 unsigned long ebi1_phys_offset = DDR2_BANK_BASE;
 EXPORT_SYMBOL(ebi1_phys_offset);
@@ -5440,7 +5437,7 @@ static void __init msm7x30_init(void)
 	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 #endif
 #endif
-	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(136);
+	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(VIVO_GPIO_BT_HOST_WAKE);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
 	msm_device_tsif.dev.platform_data = &tsif_platform_data;
@@ -5484,14 +5481,6 @@ static void __init msm7x30_init(void)
 	snddev_poweramp_gpio_init();
 	snddev_hsed_voltage_init();
 	aux_pcm_gpio_init();
-#endif
-
-#ifdef CONFIG_MMC_MSM
-	printk(KERN_ERR "%s: msm7627a_init_mmc()\n", __func__);
-	entry = create_proc_read_entry("emmc", 0, NULL, emmc_partition_read_proc, NULL);
-	printk(KERN_ERR "%s: create_proc_read_entry()\n", __func__);
-	if (!entry)
-		printk(KERN_ERR"Create /proc/emmc failed!\n");
 #endif
 
 	i2c_register_board_info(0, msm_i2c_board_info,
