@@ -16,7 +16,6 @@
 #define __ARCH_ARM_MACH_MSM_BOARD_VIVO_H
 
 #include <mach/board.h>
-#include <mach/msm_hsusb.h>
 
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)

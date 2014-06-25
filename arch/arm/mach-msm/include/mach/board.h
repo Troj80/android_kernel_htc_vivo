@@ -620,6 +620,15 @@ void msm_hsusb_set_vbus_state(int online);
 static inline void msm_hsusb_set_vbus_state(int online) {}
 #endif
 
+struct tag;
+int board_mfg_mode(void);
+int board_build_flag(void);
+int __init parse_tag_skuid(const struct tag *tags);
+int __init parse_tag_memsize(const struct tag *tags);
+int __init parse_tag_ddr_id(const struct tag *tags);
+int __init parse_tag_engineerid(const struct tag *tags);
+int __init parse_tag_cam(const struct tag *tag);
+
 void msm_snddev_init(void);
 void msm_snddev_init_timpani(void);
 void msm_snddev_poweramp_on(void);

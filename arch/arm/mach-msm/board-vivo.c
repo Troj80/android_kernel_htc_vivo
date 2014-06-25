@@ -141,6 +141,15 @@ static struct platform_device ion_dev;
 #define DDR1_BANK_BASE 0X20000000
 #define DDR2_BANK_BASE 0X40000000
 
+extern int emmc_partition_read_proc(char *page, char **start, off_t off,
+					int count, int *eof, void *data);
+
+static unsigned int engineerid;
+unsigned int vivo_get_engineerid(void)
+{
+	return engineerid;
+}
+
 static unsigned int phys_add = DDR2_BANK_BASE;
 unsigned long ebi1_phys_offset = DDR2_BANK_BASE;
 EXPORT_SYMBOL(ebi1_phys_offset);
@@ -4847,6 +4856,7 @@ static struct i2c_board_info cy8ctma300_board_info[] = {
 
 static void __init msm7x30_init(void)
 {
+	struct proc_dir_entry *entry = NULL;
 	unsigned smem_size;
 
 	uint32_t soc_version = 0;
@@ -4875,7 +4885,7 @@ static void __init msm7x30_init(void)
 	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 #endif
 #endif
-	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(VIVO_GPIO_BT_HOST_WAKE);
+	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(136);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
 	msm_device_tsif.dev.platform_data = &tsif_platform_data;
@@ -4919,6 +4929,14 @@ static void __init msm7x30_init(void)
 	snddev_poweramp_gpio_init();
 	snddev_hsed_voltage_init();
 	aux_pcm_gpio_init();
+#endif
+
+#ifdef CONFIG_MMC_MSM
+	printk(KERN_ERR "%s: msm7x30_init_mmc()\n", __func__);
+	entry = create_proc_read_entry("emmc", 0, NULL, emmc_partition_read_proc, NULL);
+	printk(KERN_ERR "%s: create_proc_read_entry()\n", __func__);
+	if (!entry)
+		printk(KERN_ERR"Create /proc/emmc failed!\n");
 #endif
 
 	i2c_register_board_info(0, i2c_tps_devices,
@@ -5234,14 +5252,13 @@ static void __init msm7x30_init_early(void)
 static void __init msm7x30_fixup(struct tag *tags, char **cmdline,
 				 struct meminfo *mi)
 {
-	for (; tags->hdr.size; tags = tag_next(tags)) {
-		if (tags->hdr.tag == ATAG_MEM && tags->u.mem.start ==
-							DDR1_BANK_BASE) {
-				ebi1_phys_offset = DDR1_BANK_BASE;
-				phys_add = DDR1_BANK_BASE;
-				break;
-		}
-	}
+	engineerid = parse_tag_engineerid(tags);
+
+	mi->nr_banks = 2;
+	mi->bank[0].start = MSM_LINUX_BASE1;
+	mi->bank[0].size = MSM_LINUX_SIZE1 + MSM_MEM_256MB_OFFSET;
+	mi->bank[1].start = MSM_LINUX_BASE2;
+	mi->bank[1].size = MSM_LINUX_SIZE2;
 }
 
 MACHINE_START(VIVO, "vivo")
