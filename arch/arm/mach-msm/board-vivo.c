@@ -136,9 +136,6 @@ static struct platform_device ion_dev;
 #define DDR1_BANK_BASE 0X20000000
 #define DDR2_BANK_BASE 0X40000000
 
-extern int emmc_partition_read_proc(char *page, char **start, off_t off,
-					int count, int *eof, void *data);
-
 extern unsigned int system_rev;
 
 static unsigned int engineerid;
@@ -4273,10 +4270,6 @@ static void __init msm7x30_init(void)
 
 	msm7x30_init_mmc();
 	msm_qsd_spi_init();
-
-	gpio_set_value(VIVO_GPIO_EMMC_RST, 0);
-	msleep(100);
-	gpio_set_value(VIVO_GPIO_EMMC_RST, 1);
 
 	sensors_ldo_init();
 	msm_fb_add_devices();
