@@ -4885,7 +4885,7 @@ static void __init msm7x30_init(void)
 	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 #endif
 #endif
-	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(136);
+	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(VIVO_GPIO_BT_HOST_WAKE);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
 	msm_device_tsif.dev.platform_data = &tsif_platform_data;
