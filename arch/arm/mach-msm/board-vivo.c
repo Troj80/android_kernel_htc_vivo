@@ -1918,14 +1918,14 @@ static struct android_pmem_platform_data android_pmem_adsp_pdata = {
        .name = "pmem_adsp",
        .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
        .cached = 0,
-	.memory_type = MEMTYPE_EBI0,
+	.memory_type = MEMTYPE_EBI1,
 };
 
 static struct android_pmem_platform_data android_pmem_audio_pdata = {
        .name = "pmem_audio",
        .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
        .cached = 0,
-	.memory_type = MEMTYPE_EBI0,
+	.memory_type = MEMTYPE_EBI1,
 };
 
 static struct platform_device android_pmem_adsp_device = {
@@ -4454,7 +4454,10 @@ static struct memtype_reserve msm7x30_reserve_table[] __initdata = {
 		.flags	=	MEMTYPE_FLAGS_1M_ALIGN,
 	},
 	[MEMTYPE_EBI1] = {
-		.flags	=	MEMTYPE_FLAGS_1M_ALIGN,
+		.start	=	PMEM_KERNEL_EBI1_BASE,
+		.limit	=	PMEM_KERNEL_EBI1_SIZE,
+		.size	=	PMEM_KERNEL_EBI1_SIZE,
+		.flags	=	MEMTYPE_FLAGS_FIXED,
 	},
 };
 
