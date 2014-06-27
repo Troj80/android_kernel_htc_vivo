@@ -244,6 +244,7 @@
 #define VIVO_SLEEP_CLK2			PMGPIO(39)
 #endif
 
+int vivo_init_mmc(unsigned int sys_rev);
 int __init vivo_init_keypad(void);
 
 enum chg_type;

@@ -139,6 +139,8 @@ static struct platform_device ion_dev;
 extern int emmc_partition_read_proc(char *page, char **start, off_t off,
 					int count, int *eof, void *data);
 
+extern unsigned int system_rev;
+
 static unsigned int engineerid;
 unsigned int vivo_get_engineerid(void)
 {
@@ -4215,6 +4217,8 @@ static void __init msm7x30_init(void)
 	struct proc_dir_entry *entry = NULL;
 	unsigned smem_size;
 
+	int rc = 0;
+
 	uint32_t soc_version = 0;
 
 	soc_version = socinfo_get_version();
@@ -4262,6 +4266,11 @@ static void __init msm7x30_init(void)
 #ifdef CONFIG_USB_EHCI_MSM_72K
 	msm_add_host(0, &msm_usb_host_pdata);
 #endif
+
+	rc = vivo_init_mmc(system_rev);
+	if (rc != 0)
+		pr_crit("%s: Unable to initialize MMC\n", __func__);
+
 	msm7x30_init_mmc();
 	msm_qsd_spi_init();
 
