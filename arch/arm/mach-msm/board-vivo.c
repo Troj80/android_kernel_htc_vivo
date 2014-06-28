@@ -4461,10 +4461,12 @@ static struct memtype_reserve msm7x30_reserve_table[] __initdata = {
 };
 
 unsigned long size;
+unsigned long msm_ion_camera_size;
 
 static void fix_sizes(void)
 {
 	size = pmem_adsp_size;
+	msm_ion_camera_size = size;
 }
 
 static void __init size_pmem_devices(void)
@@ -4509,7 +4511,7 @@ static void __init size_ion_devices(void)
 {
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 	ion_pdata.heaps[1].size = msm_ion_camera_size;
-	ion_pdata.heaps[2].size = MSM_PMEM_ADSP_BASE;
+	ion_pdata.heaps[2].size = MSM_ION_AUDIO_SIZE;
 	ion_pdata.heaps[3].size = MSM_ION_SF_SIZE;
 	ion_pdata.heaps[4].size = MSM_ION_WB_SIZE;
 #endif
