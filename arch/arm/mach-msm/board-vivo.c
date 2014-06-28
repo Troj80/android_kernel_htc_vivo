@@ -57,6 +57,7 @@
 #include <mach/msm_tsif.h>
 #include <mach/socinfo.h>
 #include <mach/msm_memtypes.h>
+#include <mach/htc_bdaddress.h>
 
 #include <asm/mach/mmc.h>
 #include <mach/vreg.h>
@@ -4270,6 +4271,8 @@ static void __init msm7x30_init(void)
 
 	msm7x30_init_mmc();
 	msm_qsd_spi_init();
+
+	bt_export_bd_address();
 
 	sensors_ldo_init();
 	msm_fb_add_devices();
