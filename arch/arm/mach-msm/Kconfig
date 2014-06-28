@@ -947,7 +947,7 @@ config MSM_STACKED_MEMORY
 	  shared memory interface.  When not present regular RAM is used.
 
 config PHYS_OFFSET
-	hex
+	hex "Kernel physical start address"
 	default "0x40800000" if ARCH_MSM9615
 	default "0x80200000" if ARCH_APQ8064
 	default "0x80200000" if ARCH_MSM8960
