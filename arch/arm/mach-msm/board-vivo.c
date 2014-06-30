@@ -190,36 +190,6 @@ static struct platform_device msm_proccomm_regulator_dev = {
 };
 #endif
 
-/*virtual key support */
-static ssize_t tma300_vkeys_show(struct kobject *kobj,
-			struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf,
-	__stringify(EV_KEY) ":" __stringify(KEY_BACK) ":50:842:80:100"
-	":" __stringify(EV_KEY) ":" __stringify(KEY_MENU) ":170:842:80:100"
-	":" __stringify(EV_KEY) ":" __stringify(KEY_HOME) ":290:842:80:100"
-	":" __stringify(EV_KEY) ":" __stringify(KEY_SEARCH) ":410:842:80:100"
-	"\n");
-}
-
-static struct kobj_attribute tma300_vkeys_attr = {
-	.attr = {
-		.mode = S_IRUGO,
-	},
-	.show = &tma300_vkeys_show,
-};
-
-static struct attribute *tma300_properties_attrs[] = {
-	&tma300_vkeys_attr.attr,
-	NULL
-};
-
-static struct attribute_group tma300_properties_attr_group = {
-	.attrs = tma300_properties_attrs,
-};
-
-static struct kobject *properties_kobj;
-
 static const unsigned int surf_keymap[] = {
 	KEY(0, 0, KEY_VOLUMEUP),
 	KEY(0, 1, KEY_VOLUMEDOWN),
@@ -4091,125 +4061,6 @@ static struct platform_device flip_switch_device = {
 	}
 };
 
-static struct regulator_bulk_data regs_tma300[] = {
-	{ .supply = "gp6", .min_uV = 3050000, .max_uV = 3100000 },
-	{ .supply = "gp7", .min_uV = 1800000, .max_uV = 1800000 },
-};
-
-static int tma300_power(int vreg_on)
-{
-	int rc;
-
-	rc = vreg_on ?
-		regulator_bulk_enable(ARRAY_SIZE(regs_tma300), regs_tma300) :
-		regulator_bulk_disable(ARRAY_SIZE(regs_tma300), regs_tma300);
-
-	if (rc)
-		pr_err("%s: could not %sable regulators: %d\n",
-				__func__, vreg_on ? "en" : "dis", rc);
-	return rc;
-}
-
-#define TS_GPIO_IRQ 150
-
-static int tma300_dev_setup(bool enable)
-{
-	int rc;
-
-	if (enable) {
-		rc = regulator_bulk_get(NULL, ARRAY_SIZE(regs_tma300),
-				regs_tma300);
-
-		if (rc) {
-			pr_err("%s: could not get regulators: %d\n",
-					__func__, rc);
-			goto out;
-		}
-
-		rc = regulator_bulk_set_voltage(ARRAY_SIZE(regs_tma300),
-				regs_tma300);
-
-		if (rc) {
-			pr_err("%s: could not set voltages: %d\n",
-					__func__, rc);
-			goto reg_free;
-		}
-
-		/* enable interrupt gpio */
-		rc = gpio_tlmm_config(GPIO_CFG(TS_GPIO_IRQ, 0, GPIO_CFG_INPUT,
-				GPIO_CFG_PULL_UP, GPIO_CFG_6MA), GPIO_CFG_ENABLE);
-		if (rc) {
-			pr_err("%s: Could not configure gpio %d\n",
-					__func__, TS_GPIO_IRQ);
-			goto reg_free;
-		}
-
-		/* virtual keys */
-		tma300_vkeys_attr.attr.name = "virtualkeys.msm_tma300_ts";
-		properties_kobj = kobject_create_and_add("board_properties",
-					NULL);
-		if (!properties_kobj) {
-			pr_err("%s: failed to create a kobject "
-					"for board_properties\n", __func__);
-			rc = -ENOMEM;
-			goto reg_free;
-		}
-		rc = sysfs_create_group(properties_kobj,
-				&tma300_properties_attr_group);
-		if (rc) {
-			pr_err("%s: failed to create a sysfs entry %s\n",
-					__func__, tma300_vkeys_attr.attr.name);
-			goto kobj_free;
-		}
-	} else {
-		regulator_bulk_free(ARRAY_SIZE(regs_tma300), regs_tma300);
-		/* destroy virtual keys */
-		if (properties_kobj) {
-			sysfs_remove_group(properties_kobj,
-				&tma300_properties_attr_group);
-			kobject_put(properties_kobj);
-		}
-	}
-	return 0;
-
-kobj_free:
-	kobject_put(properties_kobj);
-	properties_kobj = NULL;
-reg_free:
-	regulator_bulk_free(ARRAY_SIZE(regs_tma300), regs_tma300);
-out:
-	return rc;
-}
-
-static struct cy8c_ts_platform_data cy8ctma300_pdata = {
-	.power_on = tma300_power,
-	.dev_setup = tma300_dev_setup,
-	.ts_name = "msm_tma300_ts",
-	.dis_min_x = 0,
-	.dis_max_x = 640,
-	.dis_min_y = 0,
-	.dis_max_y = 1080,
-	.res_x	 = 400,
-	.res_y	 = 800,
-	.min_tid = 1,
-	.max_tid = 255,
-	.min_touch = 0,
-	.max_touch = 255,
-	.min_width = 0,
-	.max_width = 255,
-	.invert_y = 1,
-	.nfingers = 4,
-	.irq_gpio = PM8058_GPIO_PM_TO_SYS(VIVO_GPIO_TP_INT_N),
-	.resout_gpio = -1,
-};
-
-static struct i2c_board_info cy8ctma300_board_info[] = {
-	{
-		I2C_BOARD_INFO("cy8ctma300", 0x2),
-		.platform_data = &cy8ctma300_pdata,
-	}
-};
-
 static void __init msm7x30_init(void)
 {
 	struct proc_dir_entry *entry = NULL;
@@ -4320,17 +4171,6 @@ static void __init msm7x30_init(void)
 		platform_device_register(&flip_switch_device);
 
 	pm8058_gpios_init();
-
-	if (machine_is_msm7x30_fluid()) {
-		/* Initialize platform data for fluid v2 hardware */
-		if (SOCINFO_VERSION_MAJOR(
-				socinfo_get_platform_version()) == 2) {
-			cy8ctma300_pdata.res_y = 920;
-			cy8ctma300_pdata.invert_y = 0;
-		}
-		i2c_register_board_info(0, cy8ctma300_board_info,
-			ARRAY_SIZE(cy8ctma300_board_info));
-	}
 
 	boot_reason = *(unsigned int *)
 		(smem_get_entry(SMEM_POWER_ON_STATUS_INFO, &smem_size));
