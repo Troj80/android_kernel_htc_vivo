@@ -126,7 +126,7 @@ static struct platform_device ion_dev;
 #define PM8058_MPP_BASE			   PM8058_GPIO_PM_TO_SYS(PM8058_GPIOS)
 #define PM8058_MPP_PM_TO_SYS(pm_gpio)	   (pm_gpio + PM8058_MPP_BASE)
 
-#define BMA150_GPIO_INT 1
+#define BMA150_GPIO_INT VIVO_GPIO_GSENSOR_INT
 
 #define HAP_LVL_SHFT_MSM_GPIO 24
 
@@ -1610,7 +1610,9 @@ static struct platform_device qsd_device_spi = {
 
 static struct msm_gpio qsd_spi_gpio_config_data[] = {
 	{ GPIO_CFG(45, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_clk" },
+/* 46 is the Power Key GPIO
 	{ GPIO_CFG(46, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_cs0" },
+*/
 	{ GPIO_CFG(47, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_8MA), "spi_mosi" },
 	{ GPIO_CFG(48, 1, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "spi_miso" },
 };
