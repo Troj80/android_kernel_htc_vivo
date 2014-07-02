@@ -38,7 +38,7 @@ static struct gpiomux_setting usb_id_output_cfg = {
 
 static struct msm_gpiomux_config usb_id_output_configs[] __initdata = {
 	{
-		.gpio = 145,		/* VIVO_GPIO_USB_ID_PIN */
+		.gpio = 49,		/* VIVO_GPIO_USB_ID_PIN */
 		.settings = {
 			[GPIOMUX_SUSPENDED] = &usb_id_output_cfg,
 		},
@@ -52,11 +52,24 @@ static struct gpiomux_setting usb_id_input_cfg = {
 	.dir = GPIOMUX_IN,
 };
 
+static struct gpiomux_setting usb_id1_input_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_4MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_IN,
+};
+
 static struct msm_gpiomux_config usb_id_input_configs[] __initdata = {
 	{
-		.gpio = 145,		/* VIVO_GPIO_USB_ID_PIN */
+		.gpio = 49,		/* VIVO_GPIO_USB_ID_PIN */
 		.settings = {
 			[GPIOMUX_SUSPENDED] = &usb_id_input_cfg,
+		},
+	},
+	{
+		.gpio = 145,		/* VIVO_GPIO_USB_ID1_PIN */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &usb_id1_input_cfg,
 		},
 	},
 };
