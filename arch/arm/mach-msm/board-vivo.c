@@ -3981,9 +3981,8 @@ static void __init msm7x30_init(void)
 			ARRAY_SIZE(i2c_tps_devices));
 
 #ifdef CONFIG_BOSCH_BMA150
-	if (machine_is_msm7x30_fluid())
-		i2c_register_board_info(0, bma150_board_info,
-					ARRAY_SIZE(bma150_board_info));
+	i2c_register_board_info(0, bma150_board_info,
+			ARRAY_SIZE(bma150_board_info));
 #endif
 
 	i2c_register_board_info(2, msm_marimba_board_info,
