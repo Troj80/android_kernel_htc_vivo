@@ -43,7 +43,7 @@
 #include <mach/camera.h>
 #include <mach/memory.h>
 #include <mach/msm_iomap.h>
-#include <mach/msm_hsusb.h>
+#include <linux/usb/msm_hsusb.h>
 #include <mach/msm_spi.h>
 #include <mach/qdsp5v2/msm_lpa.h>
 #include <mach/dma.h>
@@ -1641,183 +1641,15 @@ static void __init msm_qsd_spi_init(void)
 	qsd_device_spi.dev.platform_data = &qsd_spi_pdata;
 }
 
-#ifdef CONFIG_USB_EHCI_MSM_72K
-static void msm_hsusb_vbus_power(unsigned phy_info, int on)
-{
-        int rc;
-        static int vbus_is_on;
-	struct pm8xxx_gpio_init_info usb_vbus = {
-		PM8058_GPIO_PM_TO_SYS(36),
-		{
-			.direction      = PM_GPIO_DIR_OUT,
-			.pull           = PM_GPIO_PULL_NO,
-			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-			.output_value   = 1,
-			.vin_sel        = 2,
-			.out_strength   = PM_GPIO_STRENGTH_MED,
-			.function       = PM_GPIO_FUNC_NORMAL,
-			.inv_int_pol    = 0,
-		},
-	};
 
-        /* If VBUS is already on (or off), do nothing. */
-        if (unlikely(on == vbus_is_on))
-                return;
-
-        if (on) {
-		rc = pm8xxx_gpio_config(usb_vbus.gpio, &usb_vbus.config);
-		if (rc) {
-                        pr_err("%s PMIC GPIO 36 write failed\n", __func__);
-                        return;
-                }
-	} else {
-		gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(36), 0);
-	}
-
-        vbus_is_on = on;
-}
-
-static struct msm_usb_host_platform_data msm_usb_host_pdata = {
-        .phy_info   = (USB_PHY_INTEGRATED | USB_PHY_MODEL_45NM),
-        .vbus_power = msm_hsusb_vbus_power,
-        .power_budget   = 180,
-};
-#endif
-
-#ifdef CONFIG_USB_MSM_OTG_72K
-static struct regulator *vreg_3p3;
-static int msm_hsusb_ldo_init(int init)
-{
-	uint32_t version = 0;
-	int def_vol = 3400000;
-
-	version = socinfo_get_version();
-
-	if (SOCINFO_VERSION_MAJOR(version) >= 2 &&
-			SOCINFO_VERSION_MINOR(version) >= 1) {
-		def_vol = 3075000;
-		pr_debug("%s: default voltage:%d\n", __func__, def_vol);
-	}
-
-	if (init) {
-		vreg_3p3 = regulator_get(NULL, "usb");
-		if (IS_ERR(vreg_3p3))
-			return PTR_ERR(vreg_3p3);
-		regulator_set_voltage(vreg_3p3, def_vol, def_vol);
-	} else
-		regulator_put(vreg_3p3);
-
-	return 0;
-}
-
-static int msm_hsusb_ldo_enable(int enable)
-{
-	static int ldo_status;
-
-	if (!vreg_3p3 || IS_ERR(vreg_3p3))
-		return -ENODEV;
-
-	if (ldo_status == enable)
-		return 0;
-
-	ldo_status = enable;
-
-	if (enable)
-		return regulator_enable(vreg_3p3);
-	else
-		return regulator_disable(vreg_3p3);
-}
-
-static int msm_hsusb_ldo_set_voltage(int mV)
-{
-	static int cur_voltage;
-
-	if (!vreg_3p3 || IS_ERR(vreg_3p3))
-		return -ENODEV;
-
-	if (cur_voltage == mV)
-		return 0;
-
-	cur_voltage = mV;
-
-	pr_debug("%s: (%d)\n", __func__, mV);
-
-	return regulator_set_voltage(vreg_3p3, mV*1000, mV*1000);
-}
-#endif
-
-#ifndef CONFIG_USB_EHCI_MSM_72K
-static int msm_hsusb_pmic_notif_init(void (*callback)(int online), int init);
-#endif
-static struct msm_otg_platform_data msm_otg_pdata = {
-
-#ifndef CONFIG_USB_EHCI_MSM_72K
-	.pmic_vbus_notif_init         = msm_hsusb_pmic_notif_init,
-#else
-	.vbus_power = msm_hsusb_vbus_power,
-#endif
-	.pemp_level		 = PRE_EMPHASIS_WITH_20_PERCENT,
-	.cdr_autoreset		 = CDR_AUTO_RESET_DISABLE,
-	.drv_ampl		 = HS_DRV_AMPLITUDE_DEFAULT,
-	.se1_gating		 = SE1_GATING_DISABLE,
-	.chg_connected		 = htc_batt_chg_connected,
-	.ldo_enable		 = msm_hsusb_ldo_enable,
-	.ldo_init		 = msm_hsusb_ldo_init,
-	.ldo_set_voltage	 = msm_hsusb_ldo_set_voltage,
-};
-
-#ifdef CONFIG_USB_GADGET
 static int phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0D, 0x1, 0x10, -1 };
-static struct msm_hsusb_gadget_platform_data msm_gadget_pdata = {
-	.phy_init_seq = phy_init_seq,
-	.is_phy_status_timer_on = 1,
-	.prop_chg = 1,
+static struct msm_otg_platform_data msm_otg_pdata = {
+	.phy_init_seq		= phy_init_seq,
+	.mode			= USB_PERIPHERAL,
+	.otg_control		= OTG_PMIC_CONTROL,
+	.power_budget		= 750,
+	.phy_type		= CI_45NM_INTEGRATED_PHY,
 };
-#endif
-#ifndef CONFIG_USB_EHCI_MSM_72K
-typedef void (*notify_vbus_state) (int);
-notify_vbus_state notify_vbus_state_func_ptr;
-int vbus_on_irq;
-static irqreturn_t pmic_vbus_on_irq(int irq, void *data)
-{
-	pr_info("%s: vbus notification from pmic\n", __func__);
-
-	(*notify_vbus_state_func_ptr) (1);
-
-	return IRQ_HANDLED;
-}
-static int msm_hsusb_pmic_notif_init(void (*callback)(int online), int init)
-{
-	int ret;
-
-	if (init) {
-		if (!callback)
-			return -ENODEV;
-
-		notify_vbus_state_func_ptr = callback;
-		vbus_on_irq = platform_get_irq_byname(&msm_device_otg,
-			"vbus_on");
-		if (vbus_on_irq <= 0) {
-			pr_err("%s: unable to get vbus on irq\n", __func__);
-			return -ENODEV;
-		}
-
-		ret = request_any_context_irq(vbus_on_irq, pmic_vbus_on_irq,
-			IRQF_TRIGGER_RISING, "msm_otg_vbus_on", NULL);
-		if (ret < 0) {
-			pr_info("%s: request_irq for vbus_on"
-				"interrupt failed\n", __func__);
-			return ret;
-		}
-		msm_otg_pdata.pmic_vbus_irq = vbus_on_irq;
-		return 0;
-	} else {
-		free_irq(vbus_on_irq, 0);
-		notify_vbus_state_func_ptr = NULL;
-		return 0;
-	}
-}
-#endif
 
 static struct android_pmem_platform_data android_pmem_pdata = {
 	.name = "pmem",
@@ -2972,11 +2804,9 @@ static struct platform_device *devices[] __initdata = {
 #endif
 	&msm_device_smd,
 	&msm_device_dmov,
-#ifdef CONFIG_USB_MSM_OTG_72K
 	&msm_device_otg,
 #ifdef CONFIG_USB_GADGET
 	&msm_device_gadget_peripheral,
-#endif
 #endif
 #ifdef CONFIG_USB_G_ANDROID
 	&android_usb_device,
@@ -4080,7 +3910,6 @@ static void __init msm7x30_init(void)
 #endif
 	msm_spm_init(&msm_spm_data, 1);
 	platform_device_register(&msm7x30_device_acpuclk);
-
 #ifdef CONFIG_USB_MSM_OTG_72K
 	if (SOCINFO_VERSION_MAJOR(soc_version) >= 2 &&
 			SOCINFO_VERSION_MINOR(soc_version) >= 1) {
@@ -4088,7 +3917,6 @@ static void __init msm7x30_init(void)
 		msm_otg_pdata.ldo_set_voltage = 0;
 	}
 
-	msm_device_otg.dev.platform_data = &msm_otg_pdata;
 #ifdef CONFIG_USB_GADGET
 	msm_otg_pdata.swfi_latency =
  	msm_pm_data
@@ -4096,6 +3924,8 @@ static void __init msm7x30_init(void)
 	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
 #endif
 #endif
+	msm_device_otg.dev.platform_data = &msm_otg_pdata;
+
 	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(VIVO_GPIO_BT_HOST_WAKE);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
@@ -4114,9 +3944,6 @@ static void __init msm7x30_init(void)
 	platform_add_devices(msm_footswitch_devices,
 			     msm_num_footswitch_devices);
 	platform_add_devices(devices, ARRAY_SIZE(devices));
-#ifdef CONFIG_USB_EHCI_MSM_72K
-	msm_add_host(0, &msm_usb_host_pdata);
-#endif
 
 	rc = vivo_init_mmc(system_rev);
 	if (rc != 0)

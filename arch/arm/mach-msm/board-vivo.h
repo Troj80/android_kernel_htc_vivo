@@ -133,7 +133,7 @@
 #define VIVO_GPIO_uP_RST PMGPIO(36)
 #define VIVO_GPIO_COMPASS_INT_N PMGPIO(37)
 #define VIVO_GPIO_WIFI_BT_SLEEP_CLK_EN	PMGPIO(38)
-#else
+#else /* Anything past this is not being used if the condition is 1 */
 #define VIVO_GPIO_WIFI_IRQ             (147)
 #define VIVO_GPIO_WIFI_SHUTDOWN_N       (39)
 
