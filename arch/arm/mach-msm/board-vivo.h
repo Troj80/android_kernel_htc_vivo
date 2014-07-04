@@ -249,7 +249,4 @@
 int vivo_init_mmc(unsigned int sys_rev);
 int __init vivo_init_keypad(void);
 
-enum chg_type;
-void htc_batt_chg_connected(enum chg_type chgtype);
-
 #endif /* __ARCH_ARM_MACH_MSM_BOARD_VIVO_H */
