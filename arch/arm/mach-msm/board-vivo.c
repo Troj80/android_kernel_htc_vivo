@@ -83,6 +83,7 @@
 #include <linux/proc_fs.h>
 #include <linux/bma150.h>
 #include <linux/tps65200.h>
+#include <mach/system.h>
 
 #include "pm.h"
 #include "board-vivo.h"
@@ -3907,6 +3908,11 @@ static struct platform_device flip_switch_device = {
 	}
 };
 
+static void vivo_hw_reset(void)
+{
+	gpio_set_value(VIVO_GPIO_PS_HOLD, 0);
+}
+
 static void __init msm7x30_init(void)
 {
 	struct proc_dir_entry *entry = NULL;
@@ -3917,6 +3923,9 @@ static void __init msm7x30_init(void)
 	uint32_t soc_version = 0;
 
 	soc_version = socinfo_get_version();
+
+	/* Must set msm_hw_reset_hook before first proc comm */
+	msm_hw_reset_hook = vivo_reset;
 
 	msm_clock_init(&msm7x30_clock_init_data);
 #ifdef CONFIG_SERIAL_MSM_CONSOLE
