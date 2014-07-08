@@ -388,7 +388,11 @@ obj-$(CONFIG_MSM_PROC_COMM_REGULATOR) += proccomm-regulator.o
 ifdef CONFIG_MSM_PROC_COMM_REGULATOR
 obj-$(CONFIG_MACH_MSM7X27_SURF) += board-msm7627-regulator.o
 obj-$(CONFIG_MACH_MSM7X27_FFA) += board-msm7627-regulator.o
+ifeq ($(CONFIG_MACH_VIVO),y)
+obj-$(CONFIG_MACH_VIVO += board-vivo-regulator.o
+else
 obj-$(CONFIG_MACH_MSM7X30_SURF) += board-msm7x30-regulator.o
+endif
 obj-$(CONFIG_MACH_MSM7X30_FFA) += board-msm7x30-regulator.o
 obj-$(CONFIG_MACH_MSM7X30_FLUID) += board-msm7x30-regulator.o
 obj-$(CONFIG_MACH_MSM8X55_SURF) += board-msm7x30-regulator.o

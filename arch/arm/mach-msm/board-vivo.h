@@ -16,6 +16,7 @@
 #define __ARCH_ARM_MACH_MSM_BOARD_VIVO_H
 
 #include <mach/board.h>
+#include "proccomm-regulator.h"
 
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
@@ -134,5 +135,8 @@
 
 int vivo_init_mmc(unsigned int sys_rev);
 int __init vivo_init_keypad(void);
+
+/* board-vivo-regulator.c */
+extern struct proccomm_regulator_platform_data msm7x30_proccomm_regulator_data;
 
 #endif /* __ARCH_ARM_MACH_MSM_BOARD_VIVO_H */

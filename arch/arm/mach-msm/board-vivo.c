@@ -84,7 +84,6 @@
 #include <linux/bma150.h>
 #include <linux/tps65200.h>
 
-#include "board-msm7x30-regulator.h"
 #include "pm.h"
 #include "board-vivo.h"
 
