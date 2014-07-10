@@ -685,7 +685,7 @@ config MACH_VIVO
        depends on ARCH_MSM7X30
        depends on !MSM_STACKED_MEMORY
        default n
-       bool "VIVO"
+       bool "Vivo"
        help
          Support for the HTC Indcredible S VIVO.
 
